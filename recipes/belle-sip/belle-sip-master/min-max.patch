@@ -1,0 +1,21 @@
+diff --git a/src/belle_sip_internal.h b/src/belle_sip_internal.h
+index 61972cf..0c980e8 100644
+--- a/src/belle_sip_internal.h
++++ b/src/belle_sip_internal.h
+@@ -263,12 +263,14 @@ struct belle_sip_dict {
+ 	belle_sip_object_t base;
+ };
+ 
+-
++#ifdef _WIN32
+ #undef MIN
+ #define MIN(a,b)	((a)>(b) ? (b) : (a))
+ #undef MAX
+ #define MAX(a,b)	((a)>(b) ? (a) : (b))
+-
++#else
++#include <sys/param.h>		/* BYTE_ORDER BIG_ENDIAN _BIG_ENDIAN */
++#endif
+ 
+ BELLESIP_INTERNAL_EXPORT char * belle_sip_concat (const char *str, ...);
+ 

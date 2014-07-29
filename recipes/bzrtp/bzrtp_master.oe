@@ -1,0 +1,5 @@
+require bzrtp.inc
+
+S = "${SRCDIR}/bzrtp/"
+
+SRC_URI = "git://git.linphone.org/bzrtp.git;commit=8ceda7ef0d35130057affc2e5a61c0667cde15aa"

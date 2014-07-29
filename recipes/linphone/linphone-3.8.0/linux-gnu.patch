@@ -1,0 +1,37 @@
+diff -urN linphone.common/configure.ac linphone.linux/configure.ac
+--- linphone.common/configure.ac	2012-11-29 10:36:50.000000000 +0100
++++ linphone.linux/configure.ac	2012-11-29 10:42:16.000000000 +0100
+@@ -592,6 +592,8 @@
+       esac],[tests_enabled=false])
+ AM_CONDITIONAL(ENABLE_TESTS, test x$tests_enabled = xyes)
+ 
++# Eliminate -lstdc++ addition to postdeps for cross compiles.
++postdeps_CXX=`echo " $postdeps_CXX " | sed 's, -lstdc++ ,,g'`
+ 
+ dnl ##################################################
+ dnl # Check for doxygen
+diff -urN linphone.common/mediastreamer2/configure.ac linphone.linux/mediastreamer2/configure.ac
+--- linphone.common/mediastreamer2/configure.ac	2012-11-29 10:37:04.000000000 +0100
++++ linphone.linux/mediastreamer2/configure.ac	2012-11-29 10:43:17.000000000 +0100
+@@ -737,6 +737,8 @@
+       esac],[tests=yes])
+ AM_CONDITIONAL(ENABLE_TESTS, test x$tests = xyes)
+ 
++# Eliminate -lstdc++ addition to postdeps for cross compiles.
++postdeps_CXX=`echo " $postdeps_CXX " | sed 's, -lstdc++ ,,g'`
+ 
+ dnl ##################################################
+ dnl # Check for doxygen
+diff -urN linphone.common/oRTP/configure.ac linphone.linux/oRTP/configure.ac
+--- linphone.common/oRTP/configure.ac	2012-11-29 10:37:19.000000000 +0100
++++ linphone.linux/oRTP/configure.ac	2012-11-29 10:43:26.000000000 +0100
+@@ -346,6 +346,9 @@
+       esac],[tests_enabled=false])
+ AM_CONDITIONAL(ENABLE_TESTS, test x$tests_enabled = xyes)
+ 
++# Eliminate -lstdc++ addition to postdeps for cross compiles.
++postdeps_CXX=`echo " $postdeps_CXX " | sed 's, -lstdc++ ,,g'`
++
+ dnl ##################################################
+ dnl # Check for doxygen
+ dnl ##################################################

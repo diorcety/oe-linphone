@@ -1,0 +1,505 @@
+diff -urN a/.git/ORIG_HEAD b/.git/ORIG_HEAD
+--- a/.git/ORIG_HEAD	1970-01-01 01:00:00.000000000 +0100
++++ b/.git/ORIG_HEAD	2013-08-09 09:43:08.000000000 +0200
+@@ -0,0 +1 @@
++321043603a9be8dff090129846590e12b55043f1
+Binary files a/.git/index and b/.git/index differ
+diff -urN a/.git/logs/HEAD b/.git/logs/HEAD
+--- a/.git/logs/HEAD	2013-08-09 09:40:40.000000000 +0200
++++ b/.git/logs/HEAD	2013-08-09 09:43:04.000000000 +0200
+@@ -1 +1,2 @@
+ 0000000000000000000000000000000000000000 321043603a9be8dff090129846590e12b55043f1 Yann Diorcet <yann.diorcet@belledonne-communications.com> 1376034040 +0200	clone: from gitosis@git.linphone.org:linphone
++321043603a9be8dff090129846590e12b55043f1 321043603a9be8dff090129846590e12b55043f1 Yann Diorcet <yann.diorcet@belledonne-communications.com> 1376034184 +0200	checkout: moving from 3.6.x to 3.6.x
+diff -urN a/.git/modules/mediastreamer2/ORIG_HEAD b/.git/modules/mediastreamer2/ORIG_HEAD
+--- a/.git/modules/mediastreamer2/ORIG_HEAD	1970-01-01 01:00:00.000000000 +0100
++++ b/.git/modules/mediastreamer2/ORIG_HEAD	2013-08-09 09:43:33.000000000 +0200
+@@ -0,0 +1 @@
++6c2a608800a221942f2a827e0abb60346e7d065f
+Binary files a/.git/modules/mediastreamer2/index and b/.git/modules/mediastreamer2/index differ
+diff -urN a/.git/modules/oRTP/ORIG_HEAD b/.git/modules/oRTP/ORIG_HEAD
+--- a/.git/modules/oRTP/ORIG_HEAD	1970-01-01 01:00:00.000000000 +0100
++++ b/.git/modules/oRTP/ORIG_HEAD	2013-08-09 09:43:38.000000000 +0200
+@@ -0,0 +1 @@
++49b16793b9ef8251a4c42434b57387c6e3c6d251
+Binary files a/.git/modules/oRTP/index and b/.git/modules/oRTP/index differ
+diff -urN a/Makefile.am b/Makefile.am
+--- a/Makefile.am	2013-08-09 09:40:40.000000000 +0200
++++ b/Makefile.am	2013-08-09 09:43:47.000000000 +0200
+@@ -101,31 +101,31 @@
+ other-cherrypick:
+ 	cd $(GTK_PREFIX) && \
+ 	for file in $(WINBINDIST_FILES) ; do \
+-		if test -d $$file; then \
++		if test -d $(prefix)/$$file; then \
+ 			$(MKDIR_P) $(INSTALLDIR_WITH_PREFIX)/$$file ;\
+ 		else \
+-			cp $$file $(INSTALLDIR_WITH_PREFIX)/$$file ;\
++			cp $(prefix)/$$file $(INSTALLDIR_WITH_PREFIX)/$$file ;\
+ 		fi \
+ 	done
+-	cp /mingw/bin/libgcc_s*.dll \
+-		/mingw/bin/libstdc++-6.dll \
+-		/mingw/bin/libintl-8.dll \
+-		/mingw/bin/libiconv-2.dll \
+-		/mingw/bin/pthreadGC2.dll \
+-		$(INSTALLDIR_WITH_PREFIX)/bin/.
++#	cp /mingw/bin/libgcc_s*.dll \
++#		/mingw/bin/libstdc++-6.dll \
++#		/mingw/bin/libintl-8.dll \
++#		/mingw/bin/libiconv-2.dll \
++#		/mingw/bin/pthreadGC2.dll \
++#		$(INSTALLDIR_WITH_PREFIX)/bin/.
+ 
+ 
+ gtk-cherrypick:
+ 	cd $(GTK_PREFIX) && \
+ 	for file in `cat $(GTK_FILELIST_PATH)` ; do \
+-		if test -d $$file; then \
++		if test -d $(prefix)/$$file; then \
+ 			$(MKDIR_P) $(INSTALLDIR_WITH_PREFIX)/$$file ;\
+ 		else \
+-			cp $$file $(INSTALLDIR_WITH_PREFIX)/$$file ;\
++			cp $(prefix)/$$file $(INSTALLDIR_WITH_PREFIX)/$$file ;\
+ 		fi \
+ 	done && \
+ 	$(MKDIR_P) $(INSTALLDIR_WITH_PREFIX)/share/themes && \
+-	cp -rf share/themes/$(GTK_THEME) $(INSTALLDIR_WITH_PREFIX)/share/themes/.
++	cp -rf $(prefix)/share/themes/$(GTK_THEME) $(INSTALLDIR_WITH_PREFIX)/share/themes/.
+ 
+ zip:
+ 	rm -f $(ZIPFILE)
+diff -urN a/configure.ac b/configure.ac
+--- a/configure.ac	2013-08-09 09:40:40.000000000 +0200
++++ b/configure.ac	2013-08-09 10:03:03.000000000 +0200
+@@ -23,6 +23,7 @@
+ 
+ LIBLINPHONE_SO_VERSION=$LIBLINPHONE_SO_CURRENT:$LIBLINPHONE_SO_REVISION:$LIBLINPHONE_SO_AGE
+ 
++AC_SUBST(LIBLINPHONE_SO_CURRENT, $LIBLINPHONE_SO_CURRENT)
+ AC_SUBST(LIBLINPHONE_SO_VERSION, $LIBLINPHONE_SO_VERSION)
+ AC_SUBST(LINPHONE_VERSION)
+ 
+@@ -35,6 +36,7 @@
+ AC_SUBST([docdir], [${datadir}/doc])
+ AC_CONFIG_HEADERS(config.h)
+ AC_CONFIG_MACRO_DIR([m4])
++gl_LD_OUTPUT_DEF
+ AC_ISC_POSIX
+ AC_PROG_CC
+ AC_PROG_CXX
+@@ -59,6 +61,7 @@
+ 		GUI_FLAGS="-mwindows"
+ 		CONSOLE_FLAGS="-mconsole"
+ 		mingw_found=yes
++		AC_CHECK_TOOL(WINDRES, windres)
+ 	;;
+ 	armv6-apple-darwin|armv7-apple-darwin|i386-apple-darwin|armv7s-apple-darwin)
+ 		CFLAGS="$CFLAGS -DTARGET_OS_IPHONE "
+@@ -116,24 +119,16 @@
+ ALL_LINGUAS="fr it de ja es pl cs nl sv pt_BR hu ru zh_CN nb_NO zh_TW he sr"
+ AC_SUBST(ALL_LINGUAS)
+ AC_DEFINE_UNQUOTED(LINPHONE_ALL_LANGS, "$ALL_LINGUAS", [All supported languages])
+-
+-if test "$mingw_found" != "yes" ; then
+-	dnl gettext macro does not work properly under mingw. And we want to use the one provided by GTK.
+ 	
+-	dnl AM_GNU_GETTEXT pollutes CPPFLAGS: workaround this.
+-	CPPFLAGS_save=$CPPFLAGS
+-	AM_GNU_GETTEXT([external])
+-	AC_SUBST(INTLLIBS)
+-	CPPFLAGS=$CPPFLAGS_save
+-	LIBS="$LIBS $LIBINTL"
+-else
+-	AC_DEFINE(ENABLE_NLS,1,[Tells whether localisation is possible])
+-	AC_DEFINE(HAVE_GETTEXT,1,[Tells wheter localisation is possible])
+-	LIBS="$LIBS -lintl"
+-fi
++dnl AM_GNU_GETTEXT pollutes CPPFLAGS: workaround this.
++CPPFLAGS_save=$CPPFLAGS
++AM_GNU_GETTEXT([external])
++AC_SUBST(INTLLIBS)
++CPPFLAGS=$CPPFLAGS_save
++LIBS="$LIBS $LIBINTL"
+ 
+ GETTEXT_PACKAGE=linphone
+-AC_SUBST(GETTEXT_PACKAGE)
++AC_SUBST([GETTEXT_PACKAGE])
+ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[The name of the gettext package name])
+ dnl AC_CHECK_LIB(intl,libintl_gettext)
+ 
+@@ -771,7 +766,6 @@
+ AM_CONDITIONAL(ENABLE_TESTS, test x$tests_enabled = xyes)
+ 
+ 
+-
+ dnl ##################################################
+ dnl # Check for doxygen
+ dnl ##################################################
+diff -urN a/coreapi/Makefile.am b/coreapi/Makefile.am
+--- a/coreapi/Makefile.am	2013-08-09 09:40:40.000000000 +0200
++++ b/coreapi/Makefile.am	2013-08-09 09:43:47.000000000 +0200
+@@ -69,6 +69,21 @@
+ 
+ liblinphone_la_LDFLAGS= -version-info $(LIBLINPHONE_SO_VERSION) -no-undefined
+ 
++if HAVE_LD_OUTPUT_DEF
++liblinphone_la_LDFLAGS += -Wl,--output-def,liblinphone-$(LIBLINPHONE_SO_CURRENT).def
++defexecdir = $(libdir)
++defexec_DATA = liblinphone-$(LIBLINPHONE_SO_CURRENT).def
++CLEANFILES = $(defexec_DATA)
++
++liblinphone-$(LIBLINPHONE_SO_CURRENT).def: liblinphone.la
++
++if BUILD_WIN32
++defexec_DATA += liblinphone-$(LIBLINPHONE_SO_CURRENT).lib
++liblinphone-$(LIBLINPHONE_SO_CURRENT).lib: liblinphone-$(LIBLINPHONE_SO_CURRENT).def liblinphone.la 
++	$(DLLTOOL) --dllname liblinphone-$(LIBLINPHONE_SO_CURRENT).dll --input-def liblinphone-$(LIBLINPHONE_SO_CURRENT).def --output-lib $@ liblinphone.la
++endif
++endif
++
+ liblinphone_la_LIBADD= \
+ 		$(EXOSIP_LIBS) \
+ 		$(MEDIASTREAMER_LIBS) \
+diff -urN a/gtk/Makefile.am b/gtk/Makefile.am
+--- a/gtk/Makefile.am	2013-08-09 09:40:40.000000000 +0200
++++ b/gtk/Makefile.am	2013-08-09 09:43:47.000000000 +0200
+@@ -61,7 +61,7 @@
+ if BUILD_WIN32
+ 
+ linphone.res:	$(LINPHONE_ICO_RC_FILE) $(LINPHONE_ICO_FILE)
+-	windres $(srcdir)/$(LINPHONE_ICO_RC_FILE) -O coff -o linphone.res
++	$(WINDRES) $(srcdir)/$(LINPHONE_ICO_RC_FILE) -O coff -o linphone.res
+ 
+ linphone_LDADD+=linphone.res -lwininet
+ linphone_LDFLAGS=-Wl,--export-all-symbols -mwindows
+diff -urN a/gtk+-2.22.1.filelist b/gtk+-2.22.1.filelist
+--- a/gtk+-2.22.1.filelist	2013-08-09 09:40:40.000000000 +0200
++++ b/gtk+-2.22.1.filelist	2013-08-09 09:43:47.000000000 +0200
+@@ -1,15 +1,17 @@
+ bin
+-bin/freetype6.dll
+-bin/intl.dll
++bin/libxml2-2.dll
++bin/libfreetype-6.dll
++bin/libintl-8.dll
+ bin/libasprintf-0.dll
+ bin/libatk-1.0-0.dll
++bin/libffi-5.dll
+ bin/libcairo-2.dll
+ bin/libcairo-gobject-2.dll
+ bin/libcairo-script-interpreter-2.dll
+ bin/libexpat-1.dll
++bin/libpixman-1-0.dll
+ bin/libfontconfig-1.dll
+ bin/libgailutil-18.dll
+-bin/libgcc_s_dw2-1.dll
+ bin/libgdk-win32-2.0-0.dll
+ bin/libgdk_pixbuf-2.0-0.dll
+ bin/libgio-2.0-0.dll
+@@ -22,8 +24,9 @@
+ bin/libpangocairo-1.0-0.dll
+ bin/libpangoft2-1.0-0.dll
+ bin/libpangowin32-1.0-0.dll
+-bin/libpng14-14.dll
++bin/libpng15-15.dll
+ bin/zlib1.dll
++bin/libiconv-2.dll
+ lib/gtk-2.0
+ lib/gtk-2.0/2.10.0
+ lib/gtk-2.0/2.10.0/engines
+diff -urN a/linphone-deps.filelist b/linphone-deps.filelist
+--- a/linphone-deps.filelist	2013-08-09 09:40:40.000000000 +0200
++++ b/linphone-deps.filelist	2013-08-09 09:43:47.000000000 +0200
+@@ -1,4 +1,6 @@
+ ./bin/avcodec-53.dll
++./bin/libspeex-1.dll
++./bin/libspeexdsp-1.dll
+ ./bin/avutil-51.dll
+ ./bin/libeay32.dll
+ ./bin/ssleay32.dll
+diff -urN a/m4/ld-output-def.m4 b/m4/ld-output-def.m4
+--- a/m4/ld-output-def.m4	1970-01-01 01:00:00.000000000 +0100
++++ b/m4/ld-output-def.m4	2013-08-09 09:43:47.000000000 +0200
+@@ -0,0 +1,29 @@
++# ld-output-def.m4 serial 2
++dnl Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
++dnl This file is free software; the Free Software Foundation
++dnl gives unlimited permission to copy and/or distribute it,
++dnl with or without modifications, as long as this notice is preserved.
++
++dnl From Simon Josefsson
++
++# gl_LD_OUTPUT_DEF()
++# -------------
++# Check if linker supports -Wl,--output-def and define automake
++# conditional HAVE_LD_OUTPUT_DEF if it is.
++AC_DEFUN([gl_LD_OUTPUT_DEF],
++[
++  AC_CACHE_CHECK([if gcc/ld supports -Wl,--output-def],
++    [gl_cv_ld_output_def],
++    [if test "$enable_shared" = no; then
++       gl_cv_ld_output_def="not needed, shared libraries are disabled"
++     else
++       gl_ldflags_save=$LDFLAGS
++       LDFLAGS="-Wl,--output-def,conftest.def"
++       AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
++                   [gl_cv_ld_output_def=yes],
++                   [gl_cv_ld_output_def=no])
++       rm -f conftest.def
++       LDFLAGS="$gl_ldflags_save"
++     fi])
++  AM_CONDITIONAL([HAVE_LD_OUTPUT_DEF], test "x$gl_cv_ld_output_def" = "xyes")
++])
+diff -urN a/mediastreamer2/configure.ac b/mediastreamer2/configure.ac
+--- a/mediastreamer2/configure.ac	2013-08-09 09:41:05.000000000 +0200
++++ b/mediastreamer2/configure.ac	2013-08-09 10:09:33.000000000 +0200
+@@ -23,6 +23,7 @@
+ 	MEDIASTREAMER_VERSION="${MEDIASTREAMER_VERSION}.${MEDIASTREAMER_EXTRA_VERSION}"
+ fi
+ 
++AC_SUBST(LIBMEDIASTREAMER_SO_CURRENT, $LIBMEDIASTREAMER_SO_CURRENT)
+ AC_SUBST(LIBMEDIASTREAMER_SO_VERSION)
+ AC_SUBST(MEDIASTREAMER_VERSION)
+ 
+@@ -40,6 +41,7 @@
+ AC_DEFINE_UNQUOTED(MEDIASTREAMER_VERSION,"$MEDIASTREAMER_VERSION",[MEDIASTREAMER version number])
+ 
+ MS_PUBLIC_CFLAGS=
++gl_LD_OUTPUT_DEF
+ 
+ AC_MSG_CHECKING([warning make an error on compilation])
+ AC_ARG_ENABLE(strict,
+@@ -190,19 +192,13 @@
+ GETTEXT_PACKAGE="mediastreamer"
+ AC_SUBST([GETTEXT_PACKAGE])
+ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[name of the gettext domain. Used in the call to 'bindtextdomain()'])
+-if test "$mingw_found" != "yes" ; then
+-	dnl gettext macro does not work properly under mingw. And we want to use the one provided by GTK.
+-	CPPFLAGS_save=$CPPFLAGS
+-	AM_GNU_GETTEXT([external])
+-	CPPFLAGS=$CPPFLAGS_save
+-	LIBS="$LIBS $LIBINTL"
+-else
+-	if test "$USE_NLS" = "yes" ; then
+-		AC_DEFINE(ENABLE_NLS,1,[Tells whether localisation is possible])
+-		AC_DEFINE(HAVE_GETTEXT,1,[Tells wheter localisation is possible])
+-		LIBS="$LIBS -lintl"
+-	fi
+-fi
++
++dnl AM_GNU_GETTEXT pollutes CPPFLAGS: workaround this.
++CPPFLAGS_save=$CPPFLAGS
++AM_GNU_GETTEXT([external])
++AC_SUBST(INTLLIBS)
++CPPFLAGS=$CPPFLAGS_save
++LIBS="$LIBS $LIBINTL"
+ 
+ AM_CONDITIONAL(BUILD_MACOSX, test x$macosx_found = xyes)
+ AM_CONDITIONAL(BUILD_IOS, test x$ios_found = xyes)
+diff -urN a/mediastreamer2/m4/ld-output-def.m4 b/mediastreamer2/m4/ld-output-def.m4
+--- a/mediastreamer2/m4/ld-output-def.m4	1970-01-01 01:00:00.000000000 +0100
++++ b/mediastreamer2/m4/ld-output-def.m4	2013-08-09 09:43:47.000000000 +0200
+@@ -0,0 +1,29 @@
++# ld-output-def.m4 serial 2
++dnl Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
++dnl This file is free software; the Free Software Foundation
++dnl gives unlimited permission to copy and/or distribute it,
++dnl with or without modifications, as long as this notice is preserved.
++
++dnl From Simon Josefsson
++
++# gl_LD_OUTPUT_DEF()
++# -------------
++# Check if linker supports -Wl,--output-def and define automake
++# conditional HAVE_LD_OUTPUT_DEF if it is.
++AC_DEFUN([gl_LD_OUTPUT_DEF],
++[
++  AC_CACHE_CHECK([if gcc/ld supports -Wl,--output-def],
++    [gl_cv_ld_output_def],
++    [if test "$enable_shared" = no; then
++       gl_cv_ld_output_def="not needed, shared libraries are disabled"
++     else
++       gl_ldflags_save=$LDFLAGS
++       LDFLAGS="-Wl,--output-def,conftest.def"
++       AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
++                   [gl_cv_ld_output_def=yes],
++                   [gl_cv_ld_output_def=no])
++       rm -f conftest.def
++       LDFLAGS="$gl_ldflags_save"
++     fi])
++  AM_CONDITIONAL([HAVE_LD_OUTPUT_DEF], test "x$gl_cv_ld_output_def" = "xyes")
++])
+diff -urN a/mediastreamer2/src/Makefile.am b/mediastreamer2/src/Makefile.am
+--- a/mediastreamer2/src/Makefile.am	2013-08-09 09:41:05.000000000 +0200
++++ b/mediastreamer2/src/Makefile.am	2013-08-09 09:43:47.000000000 +0200
+@@ -274,8 +274,29 @@
+ 	awk 'BEGIN { print("MSFilterDesc * ms_voip_filter_descs[]={") } { printf("&%s,\n",$$1) } END{ print("NULL\n};\n") } ' $(abs_builddir)/voipdescs.txt >> $(abs_builddir)/$@
+ 
+ 
+-libmediastreamer_base_la_LIBADD=	$(ORTP_LIBS)
+-libmediastreamer_base_la_LDFLAGS= -no-undefined -version-info $(LIBMEDIASTREAMER_SO_VERSION)
++libmediastreamer_base_la_LIBADD = $(ORTP_LIBS)
++libmediastreamer_voip_la_LIBADD = libmediastreamer_base.la 
++libmediastreamer_base_la_LDFLAGS = -no-undefined -version-info $(LIBMEDIASTREAMER_SO_VERSION)
++libmediastreamer_voip_la_LDFLAGS = -no-undefined -version-info $(LIBMEDIASTREAMER_SO_VERSION)
++
++if HAVE_LD_OUTPUT_DEF
++libmediastreamer_base_la_LDFLAGS += -Wl,--output-def,libmediastreamer_base-$(LIBMEDIASTREAMER_SO_CURRENT).def
++libmediastreamer_voip_la_LDFLAGS += -Wl,--output-def,libmediastreamer_voip-$(LIBMEDIASTREAMER_SO_CURRENT).def
++defexecdir = $(libdir)
++defexec_DATA = libmediastreamer_base-$(LIBMEDIASTREAMER_SO_CURRENT).def libmediastreamer_voip-$(LIBMEDIASTREAMER_SO_CURRENT).def
++CLEANFILES += $(defexec_DATA)
++
++libmediastreamer_base-$(LIBMEDIASTREAMER_SO_CURRENT).def: libmediastreamer_base.la
++libmediastreamer_voip-$(LIBMEDIASTREAMER_SO_CURRENT).def: libmediastreamer_voip.la
++
++if BUILD_WIN32
++defexec_DATA += libmediastreamer_base-$(LIBMEDIASTREAMER_SO_CURRENT).lib libmediastreamer_voip-$(LIBMEDIASTREAMER_SO_CURRENT).lib
++libmediastreamer_base-$(LIBMEDIASTREAMER_SO_CURRENT).lib: libmediastreamer_base-$(LIBMEDIASTREAMER_SO_CURRENT).def libmediastreamer_base.la
++	$(DLLTOOL) --dllname libmediastreamer_base-$(LIBMEDIASTREAMER_SO_CURRENT).dll --input-def libmediastreamer_base-$(LIBMEDIASTREAMER_SO_CURRENT).def --output-lib $@ libmediastreamer_base.la
++libmediastreamer_voip-$(LIBMEDIASTREAMER_SO_CURRENT).lib: libmediastreamer_voip-$(LIBMEDIASTREAMER_SO_CURRENT).def libmediastreamer_voip.la
++	$(DLLTOOL) --dllname libmediastreamer_voip-$(LIBMEDIASTREAMER_SO_CURRENT).dll --input-def libmediastreamer_voip-$(LIBMEDIASTREAMER_SO_CURRENT).def --output-lib $@ libmediastreamer_voip.la
++endif
++endif
+ 
+ if !BUILD_WIN32
+ libmediastreamer_base_la_LDFLAGS+=-rdynamic
+@@ -330,6 +351,8 @@
+ 
+ 
+ libmediastreamer_voip_la_LIBADD=	libmediastreamer_base.la \
++					$(ORTP_LIBS) \
++					$(VP8_LIBS) \
+ 					$(PORTAUDIO_LIBS) \
+ 					$(ALSA_LIBS) \
+ 					$(ARTS_LIBS) \
+@@ -342,6 +365,15 @@
+ 					$(PCAP_LIBS) \
+ 					$(OPUS_LIBS)
+ 
++if BUILD_WIN32
++libmediastreamer_voip_la_LIBADD+=       -lole32 \
++                                        -loleaut32\
++                                        -lwinmm \
++                                        -luuid
++
++
++endif
++
+ if BUILD_VP8
+ AM_CFLAGS+=$(VP8_CFLAGS)
+ libmediastreamer_voip_la_LIBADD+=$(VP8_LIBS)
+@@ -353,8 +385,6 @@
+ 					$(GLEW_LIBS)
+ endif
+ 
+-libmediastreamer_voip_la_LDFLAGS=	$(libmediastreamer_base_la_LDFLAGS)
+-
+ if BUILD_UPNP
+ AM_CFLAGS+=$(LIBUPNP_CFLAGS) -D_GNU_SOURCE
+ libmediastreamer_voip_la_LIBADD+=	$(LIBUPNP_LIBS)
+diff -urN a/mediastreamer2/src/voip/ice.c b/mediastreamer2/src/voip/ice.c
+--- a/mediastreamer2/src/voip/ice.c	2013-08-09 09:41:05.000000000 +0200
++++ b/mediastreamer2/src/voip/ice.c	2013-08-09 09:43:47.000000000 +0200
+@@ -190,7 +190,7 @@
+ static char * generate_ufrag(void)
+ {
+ 	char *ufrag = ms_malloc(9);
+-	sprintf(ufrag, "%08lx", random());
++	sprintf(ufrag, "%08x", (int)random());
+ 	ufrag[8] = '\0';
+ 	return ufrag;
+ }
+@@ -198,7 +198,7 @@
+ static char * generate_pwd(void)
+ {
+ 	char *pwd = ms_malloc(25);
+-	sprintf(pwd, "%08lx%08lx%08lx", random(), random(), random());
++	sprintf(pwd, "%08x%08x%08x", (int)random(), (int)random(), (int)random());
+ 	pwd[24] = '\0';
+ 	return pwd;
+ }
+diff -urN a/oRTP/configure.ac b/oRTP/configure.ac
+--- a/oRTP/configure.ac	2013-08-09 09:41:31.000000000 +0200
++++ b/oRTP/configure.ac	2013-08-09 09:43:47.000000000 +0200
+@@ -21,6 +21,7 @@
+ 
+ ORTP_PKGCONFIG_VERSION=${ORTP_VERSION}
+ 
++AC_SUBST(LIBORTP_SO_CURRENT, $LIBORTP_SO_CURRENT)
+ AC_SUBST(LIBORTP_SO_VERSION)
+ AC_SUBST(ORTP_VERSION)
+ AC_SUBST(ORTP_PKGCONFIG_VERSION)
+@@ -41,6 +42,8 @@
+ dnl Checks for programs.
+ AC_PROG_CC
+ LT_INIT([win32-dll shared disable-static])
++AC_CONFIG_MACRO_DIR([m4])
++gl_LD_OUTPUT_DEF
+ 
+ AC_MSG_CHECKING([warning make an error on compilation])
+ AC_ARG_ENABLE(strict,
+@@ -145,6 +148,7 @@
+ 	;;
+ esac
+ 
++AM_CONDITIONAL(BUILD_WIN32, test "$mingw_found" = "yes")
+ AC_CONFIG_COMMANDS([libtool-hacking],
+ 	[if test "$mingw_found" = "yes" ; then
+ 		echo "Hacking libtool to work with mingw..."
+diff -urN a/oRTP/m4/ld-output-def.m4 b/oRTP/m4/ld-output-def.m4
+--- a/oRTP/m4/ld-output-def.m4	1970-01-01 01:00:00.000000000 +0100
++++ b/oRTP/m4/ld-output-def.m4	2013-08-09 09:43:47.000000000 +0200
+@@ -0,0 +1,29 @@
++# ld-output-def.m4 serial 2
++dnl Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
++dnl This file is free software; the Free Software Foundation
++dnl gives unlimited permission to copy and/or distribute it,
++dnl with or without modifications, as long as this notice is preserved.
++
++dnl From Simon Josefsson
++
++# gl_LD_OUTPUT_DEF()
++# -------------
++# Check if linker supports -Wl,--output-def and define automake
++# conditional HAVE_LD_OUTPUT_DEF if it is.
++AC_DEFUN([gl_LD_OUTPUT_DEF],
++[
++  AC_CACHE_CHECK([if gcc/ld supports -Wl,--output-def],
++    [gl_cv_ld_output_def],
++    [if test "$enable_shared" = no; then
++       gl_cv_ld_output_def="not needed, shared libraries are disabled"
++     else
++       gl_ldflags_save=$LDFLAGS
++       LDFLAGS="-Wl,--output-def,conftest.def"
++       AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
++                   [gl_cv_ld_output_def=yes],
++                   [gl_cv_ld_output_def=no])
++       rm -f conftest.def
++       LDFLAGS="$gl_ldflags_save"
++     fi])
++  AM_CONDITIONAL([HAVE_LD_OUTPUT_DEF], test "x$gl_cv_ld_output_def" = "xyes")
++])
+diff -urN a/oRTP/src/Makefile.am b/oRTP/src/Makefile.am
+--- a/oRTP/src/Makefile.am	2013-08-09 09:41:31.000000000 +0200
++++ b/oRTP/src/Makefile.am	2013-08-09 09:43:47.000000000 +0200
+@@ -51,5 +51,19 @@
+ 
+ libortp_la_LDFLAGS= -version-info $(LIBORTP_SO_VERSION) -no-undefined
+ 
++if HAVE_LD_OUTPUT_DEF
++libortp_la_LDFLAGS += -Wl,--output-def,libortp-$(LIBORTP_SO_CURRENT).def
++defexecdir = $(libdir)
++defexec_DATA = libortp-$(LIBORTP_SO_CURRENT).def
++CLEANFILES = $(defexec_DATA)
++
++libortp-$(LIBORTP_SO_CURRENT).def: libortp.la
++
++if BUILD_WIN32
++defexec_DATA += libortp-$(LIBORTP_SO_CURRENT).lib
++libortp-$(LIBORTP_SO_CURRENT).lib: libortp-$(LIBORTP_SO_CURRENT).def libortp.la
++	$(DLLTOOL) --dllname libortp-$(LIBORTP_SO_CURRENT).dll --input-def libortp-$(LIBORTP_SO_CURRENT).def --output-lib $@ libortp.la
++endif
++endif
+ 
+ SUBDIRS= . tests

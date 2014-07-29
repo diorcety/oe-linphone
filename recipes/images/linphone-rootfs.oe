@@ -1,0 +1,33 @@
+DESCRIPTION = "Root filesystem for linphone"
+
+RDEPENDS = " \
+    target:linphone \
+"
+
+RDEPENDS:>DEBUG = "target:linphone-dbg"
+
+RDEPENDS += "${RDEPENDS_SDK}"
+RDEPENDS_SDK:machine = " \
+    target:libstdc++ \
+    target:libc \
+    target:libgcc \
+    target:libm \
+"
+
+RDEPENDS_SDK:>HOST_KERNEL_linux = " \
+    target:libdl \
+    target:libpthread \
+    target:librt \
+    target:libutil \
+    target:libcrypt \
+    target:libresolv \
+"
+
+
+IMAGE_BASENAME:machine = "${PN}-${DISTRO}-${MACHINE}"
+IMAGE_BASENAME:native = "${PN}-${DISTRO}-${HOST_OS}"
+RDEPENDS_ROOTFS = ""
+
+inherit rootfs
+
+RECIPE_TYPES = "machine native"

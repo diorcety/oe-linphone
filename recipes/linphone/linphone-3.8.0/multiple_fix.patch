@@ -1,0 +1,27 @@
+diff -urN a/coreapi/linphonecore.c b/coreapi/linphonecore.c
+--- a/coreapi/linphonecore.c	2013-11-09 11:47:52.901464804 +0100
++++ b/coreapi/linphonecore.c	2013-11-09 12:43:15.699473557 +0100
+@@ -17,7 +17,9 @@
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+ 
++#ifndef _GNU_SOURCE
+ #define _GNU_SOURCE
++#endif
+ 
+ #include "linphonecore.h"
+ #include "sipsetup.h"
+diff -urN a/oRTP/src/rtpsession_inet.c b/oRTP/src/rtpsession_inet.c
+--- a/oRTP/src/rtpsession_inet.c	2013-11-09 11:48:45.387901570 +0100
++++ b/oRTP/src/rtpsession_inet.c	2013-11-09 11:51:37.574162223 +0100
+@@ -17,8 +17,9 @@
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+ 
+-
++#ifndef _GNU_SOURCE
+ #define _GNU_SOURCE
++#endif
+ 
+ #if defined(WIN32) || defined(_WIN32_WCE)
+ #include "ortp-config-win32.h"

@@ -1,0 +1,13 @@
+diff --git a/configure.ac b/configure.ac
+index 903dea2..6e2014f 100755
+--- a/configure.ac
++++ b/configure.ac
+@@ -292,6 +292,8 @@ AM_CONDITIONAL(ENABLE_TESTS, test x$tests_enabled = xyes && test x$found_cunit =
+ 
+ # Checks for typedefs, structures, and compiler characteristics.
+ 
++# Eliminate -lstdc++ addition to postdeps for cross compiles.
++postdeps_CXX=`echo " $postdeps_CXX " | sed 's, -lstdc++ ,,g'`
+ 
+ # Eliminate -lstdc++ addition to postdeps for cross compiles.
+ postdeps_CXX=`echo " $postdeps_CXX " | sed 's, -lstdc++ ,,g'`

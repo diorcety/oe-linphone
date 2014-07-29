@@ -1,0 +1,108 @@
+diff --git a/src/auth_helper.c b/src/auth_helper.c
+index a40c6a0..1bcb5d3 100644
+--- a/src/auth_helper.c
++++ b/src/auth_helper.c
+@@ -201,7 +201,7 @@ int belle_sip_auth_helper_fill_authorization(belle_sip_header_authorization_t* a
+ 	if (auth_mode) {
+ 		CHECK_IS_PRESENT(authorization,authorization,nonce_count)
+ 		if (!belle_sip_header_authorization_get_cnonce(authorization)) {
+-			snprintf(cnonce,sizeof(cnonce),"%08x",(short)(long)authorization^0x5555555); /*spseudo randomly genrated cnonce*/
++			snprintf(cnonce,sizeof(cnonce),"%08x",(short)(long)(uintptr_t)authorization^0x5555555); /*spseudo randomly genrated cnonce*/
+ 			belle_sip_header_authorization_set_cnonce(authorization,cnonce);
+ 		}
+ 	}
+diff --git a/src/belle_sdp_impl.c b/src/belle_sdp_impl.c
+index 24a6aad..b0624a8 100644
+--- a/src/belle_sdp_impl.c
++++ b/src/belle_sdp_impl.c
+@@ -234,7 +234,7 @@ belle_sip_error_code belle_sdp_media_marshal(belle_sdp_media_t* media, char* buf
+ 	error=belle_sip_snprintf(buff,buff_size,offset," %s",media->protocol);
+ 	if (error!=BELLE_SIP_OK) return error;
+ 	for(;list!=NULL;list=list->next){
+-		error=belle_sip_snprintf(buff,buff_size,offset," %li",(long)list->data);
++		error=belle_sip_snprintf(buff,buff_size,offset," %li",(long)(uintptr_t)list->data);
+ 		if (error!=BELLE_SIP_OK) return error; 
+ 	}
+ 	return error;
+@@ -686,7 +686,7 @@ belle_sip_list_t* belle_sdp_media_description_build_mime_parameters(const belle_
+ 		mime_parameter = belle_sdp_mime_parameter_new();
+ 		belle_sdp_mime_parameter_set_ptime(mime_parameter,ptime_as_int);
+ 		belle_sdp_mime_parameter_set_max_ptime(mime_parameter,max_ptime_as_int);
+-		belle_sdp_mime_parameter_set_media_format(mime_parameter,(int)(long)media_formats->data);
++		belle_sdp_mime_parameter_set_media_format(mime_parameter,(int)(long)(uintptr_t)media_formats->data);
+ 		
+ 		/*get rtpmap*/
+ 		rtpmap = belle_sdp_media_description_a_attr_value_get_with_pt(media_description
+@@ -717,7 +717,7 @@ void belle_sdp_media_description_append_values_from_mime_parameter(belle_sdp_med
+ 	int current_max_ptime=0;
+ 
+ 	belle_sdp_media_set_media_formats(media,belle_sip_list_append(belle_sdp_media_get_media_formats(media)
+-																,(void*)(long)(belle_sdp_mime_parameter_get_media_format(mime_parameter))));
++																,(void*)(uintptr_t)(long)(belle_sdp_mime_parameter_get_media_format(mime_parameter))));
+ 
+ 	if (belle_sdp_media_description_get_attribute_value(media_description,"ptime")) {
+ 		current_ptime=atoi(belle_sdp_media_description_get_attribute_value(media_description,"ptime"));
+diff --git a/src/belle_sip_loop.c b/src/belle_sip_loop.c
+index 5e03ba4..d92b1e0 100644
+--- a/src/belle_sip_loop.c
++++ b/src/belle_sip_loop.c
+@@ -321,14 +321,14 @@ unsigned int belle_sip_source_get_timeout(const belle_sip_source_t *s){
+ 
+ 
+ static int match_source_id(const void *s, const void *pid){
+-	if ( ((belle_sip_source_t*)s)->id==(unsigned long)pid){
++	if ( ((belle_sip_source_t*)s)->id==(unsigned long)(uintptr_t)pid){
+ 		return 0;
+ 	}
+ 	return -1;
+ }
+ 
+ belle_sip_source_t *belle_sip_main_loop_find_source(belle_sip_main_loop_t *ml, unsigned long id){
+-	belle_sip_list_t *elem=belle_sip_list_find_custom(ml->sources,match_source_id,(const void*)id);
++	belle_sip_list_t *elem=belle_sip_list_find_custom(ml->sources,match_source_id,(const void*)(uintptr_t)id);
+ 	if (elem!=NULL){
+ 		return (belle_sip_source_t*)elem->data;
+ 	}
+diff --git a/src/transports/stream_channel.c b/src/transports/stream_channel.c
+index cd1cff0..ce8d513 100644
+--- a/src/transports/stream_channel.c
++++ b/src/transports/stream_channel.c
+@@ -185,14 +185,14 @@ int finalize_stream_connection(belle_sip_stream_channel_t *obj, unsigned int rev
+ 	
+ 	err=getsockopt(sock,SOL_SOCKET,SO_ERROR,(void*)&errnum,&optlen);
+ 	if (err!=0){
+-		belle_sip_error("Failed to retrieve connection status for fd [%i]: cause [%s]",sock,belle_sip_get_socket_error_string());
++		belle_sip_error("Failed to retrieve connection status for fd [%i]: cause [%s]",(int)sock,belle_sip_get_socket_error_string());
+ 		return -1;
+ 	}else{
+ 		if (errnum==0){
+ 			/*obtain bind address for client*/
+ 			err=getsockname(sock,addr,slen);
+ 			if (err<0){
+-				belle_sip_error("Failed to retrieve sockname  for fd [%i]: cause [%s]",sock,belle_sip_get_socket_error_string());
++				belle_sip_error("Failed to retrieve sockname  for fd [%i]: cause [%s]",(int)sock,belle_sip_get_socket_error_string());
+ 				return -1;
+ 			}
+ #if TARGET_OS_IPHONE
+@@ -203,7 +203,7 @@ int finalize_stream_connection(belle_sip_stream_channel_t *obj, unsigned int rev
+ 			set_tcp_nodelay(sock);
+ 			return 0;
+ 		}else{
+-			belle_sip_error("Connection failed  for fd [%i]: cause [%s]",sock,belle_sip_get_socket_error_string_from_code(errnum));
++			belle_sip_error("Connection failed  for fd [%i]: cause [%s]",(int)sock,belle_sip_get_socket_error_string_from_code(errnum));
+ 			return -1;
+ 		}
+ 	}
+diff --git a/src/grammars/belle_sdp.g b/src/grammars/belle_sdp.g
+index 57a69e0..c70b2d9 100644
+--- a/src/grammars/belle_sdp.g
++++ b/src/grammars/belle_sdp.g
+@@ -327,7 +327,7 @@ scope { int is_number; }
+ @init { $fmt::is_number=0;}:                 ((DIGIT+)=>(DIGIT+){$fmt::is_number=1;} | token ) 
+                                                                           {belle_sdp_media_set_media_formats($media::current
+                                                                           ,belle_sip_list_append(belle_sdp_media_get_media_formats($media::current)
+-                                                                          ,(void*)($fmt::is_number?(void*)(long)atoi((const char*)$fmt.text->chars):$fmt.text->chars)));};
++                                                                          ,(void*)(intptr_t)($fmt::is_number?(void*)(intptr_t)(long)atoi((const char*)$fmt.text->chars):$fmt.text->chars)));};
+                      //;typically an RTP payload type for audio
+                      //;and video media
+ proto              options { greedy = false; }:        ~(SPACE|CR|LF)*;

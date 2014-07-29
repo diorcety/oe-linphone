@@ -1,0 +1,19 @@
+diff -urN a/mediastreamer2/src/audiofilters/winsnd3.c b/mediastreamer2/src/audiofilters/winsnd3.c
+--- a/mediastreamer2/src/audiofilters/winsnd3.c	2013-10-09 21:59:23.282078967 +0200
++++ b/mediastreamer2/src/audiofilters/winsnd3.c	2013-10-09 22:09:16.172112736 +0200
+@@ -18,13 +18,14 @@
+ */
+ 
+ #define UNICODE
++#define _UNICODE
+ 
+ #include "mediastreamer2/mssndcard.h"
+ #include "mediastreamer2/msfilter.h"
+ #include "mediastreamer2/msticker.h"
+ 
+ #include <mmsystem.h>
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__MINGW64_VERSION_STR)
+ #include <mmreg.h>
+ #endif
+ #include <msacm.h>

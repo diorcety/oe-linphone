@@ -1,0 +1,18 @@
+diff -urN '--exclude=.git' a/configure.ac b/configure.ac
+--- a/configure.ac	2014-08-04 08:13:20.285057282 +0200
++++ b/configure.ac	2014-08-04 08:16:43.057744706 +0200
+@@ -293,10 +293,12 @@
+ 
+ if test "$gtk_ui" = "true" ; then
+ 	PKG_CHECK_MODULES(LIBGTK, gtk+-2.0 >= 2.18.0 gthread-2.0)
+-	if test "$enable_x11" = "false" ; then
++	case $target in
++	x86_64-*-darwin*|i686-*-darwin*)
+ 		PKG_CHECK_MODULES(LIBGTKMAC,[gtk-mac-integration >= 2.0.1])
+ 		AC_DEFINE([HAVE_GTK_OSX],[1],[Defined when gtk osx is used])
+-	fi
++	;;
++	esac
+ else
+ 	echo "GTK interface compilation is disabled."
+ fi

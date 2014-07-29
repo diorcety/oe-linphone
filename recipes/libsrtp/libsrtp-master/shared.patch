@@ -1,0 +1,175 @@
+diff --git a/Makefile.in b/Makefile.in
+index 394d417..f38d609 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -55,6 +55,8 @@ INSTALL	= @INSTALL@
+ # EXE defines the suffix on executables - it's .exe for Windows, and
+ # null on linux, bsd, and OS X and other OSes.
+ EXE	= @EXE@
++SHLIBVERSION	= @SHLIBVERSION@
++SHLIB = @SHLIB@
+ 
+ # gdoi is the group domain of interpretation for isakmp, a group key
+ # management system which can provide keys for srtp
+@@ -74,6 +76,8 @@ prefix = @prefix@
+ exec_prefix = @exec_prefix@
+ includedir = @includedir@
+ libdir = @libdir@
++shlibdir = @shlibdir@
++host_os = @host_os@
+ 
+ 
+ # implicit rules for object files and test apps
+@@ -117,9 +121,20 @@ libsrtp.a: $(srtpobj) $(cryptobj) $(gdoi)
+ 	$(RANLIB) libsrtp.a
+ 
+ libsrtp.so: $(srtpobj) $(cryptobj) $(gdoi) 
+-	$(CC) -shared -Wl,-soname,libsrtp.so \
++	$(CC) -shared -Wl,-soname,libsrtp$(SHLIBVERSION) \
+ 	    -o libsrtp.so $^ $(LDFLAGS)
+ 
++libsrtp$(SHLIBVERSION): $(srtpobj) $(cryptobj) $(gdoi)
++	$(eval EXTLDFLAGS := )
++ifneq (,$(findstring darwin,$(host_os)))
++	$(eval EXTLDFLAGS := -dynamiclib -Wl,-install_name,$(shlibdir)/libsrtp$(SHLIBVERSION))
++endif
++ifneq (,$(findstring mingw,$(host_os)))
++	$(eval EXTLDFLAGS := -Wl,--out-implib,libsrtp.dll.a)
++endif
++	$(COMPILE) -shared -Wl,-soname,libsrtp$(SHLIBVERSION) $(LDFLAGS) $(EXTLDFLAGS) -o libsrtp$(SHLIBVERSION) $^ $(LIBS)
++	if [ -n "$(SHLIB)" ]; then ln -s libsrtp$(SHLIBVERSION) libsrtp$(SHLIB); fi	
++
+ # libcryptomath.a contains general-purpose routines that are used to
+ # generate tables and verify cryptoalgorithm implementations - this
+ # library is not meant to be included in production code
+@@ -145,7 +160,7 @@ testapp = $(crypto_testapp) test/srtp_driver$(EXE) test/replay_driver$(EXE) \
+ 	  test/roc_driver$(EXE) test/rdbx_driver$(EXE) test/rtpw$(EXE) \
+ 	  test/dtls_srtp_driver$(EXE)
+ 
+-$(testapp): libsrtp.a
++$(testapp): libsrtp.a libsrtp$(SHLIBVERSION)
+ 
+ test/rtpw$(EXE): test/rtpw.c test/rtp.c test/getopt_s.c
+ 	$(COMPILE) $(LDFLAGS) -o $@ $^ $(LIBS) $(SRTPLIB)
+@@ -212,21 +227,26 @@ install:
+ 	fi
+ 	$(INSTALL) -d $(DESTDIR)$(includedir)/srtp
+ 	$(INSTALL) -d $(DESTDIR)$(libdir)
++	$(INSTALL) -d $(DESTDIR)$(shlibdir)
+ 	cp $(srcdir)/include/*.h $(DESTDIR)$(includedir)/srtp  
+ 	cp $(srcdir)/crypto/include/*.h $(DESTDIR)$(includedir)/srtp
+ 	if [ "$(srcdir)" != "." ]; then cp crypto/include/*.h $(DESTDIR)$(includedir)/srtp; fi
+ 	if [ -f libsrtp.a ]; then cp libsrtp.a $(DESTDIR)$(libdir)/; fi
+-	if [ -f libsrtp.so ]; then cp libsrtp.so $(DESTDIR)$(libdir)/; fi
++	if [ -f libsrtp${SHLIB} ]; then cp -d libsrtp${SHLIB} $(DESTDIR)$(shlibdir)/; fi
++	if [ -f libsrtp${SHLIBVERSION} ]; then cp -d libsrtp${SHLIBVERSION} $(DESTDIR)$(shlibdir)/; fi
++	if [ -f libsrtp.dll.a ]; then cp -d libsrtp.dll.a $(DESTDIR)$(libdir)/; fi
+ 
+ uninstall:
+ 	rm -f $(DESTDIR)$(includedir)/srtp/*.h
+ 	rm -f $(DESTDIR)$(libdir)/libsrtp.a
+-	rm -f $(DESTDIR)$(libdir)/libsrtp.so
++	rm -f $(DESTDIR)$(libdir)/libsrtp$(SHLIB) $(DESTDIR)$(libdir)/libsrtp$(SHLIBVERSION)
++	rm -f $(DESTDIR)$(libdir)/libsrtp.dll.a
+ 	-rmdir $(DESTDIR)$(includedir)/srtp
+ 
+ clean:
+ 	rm -rf $(cryptobj) $(srtpobj) $(cryptomath) TAGS \
+-        libcryptomath.a libsrtp.a libsrtp.so core *.core test/core
++        libcryptomath.a libsrtp.a core *.core test/core
++	rm -rf libsrtp$(SHLIB) libsrtp$(SHLIBVERSION)
+ 	for a in * */* */*/*; do			\
+               if [ -f "$$a~" ] ; then rm -f $$a~; fi;	\
+         done;
+diff --git a/configure b/configure
+index 18c7a16..cfaabb8 100755
+--- a/configure
++++ b/configure
+@@ -4080,15 +4080,25 @@ $as_echo "#define CPU_RISC 1" >>confdefs.h
+ 	;;
+ esac
+ 
+-case $host_os in
+-    *cygwin*|*mingw* )
+-	EXE=.exe
+-	HOST_IS_WINDOWS=yes
+-	;;
+-    * )
+-	EXE=""
+-	;;
+-esac
++ VERSION=`cat $srcdir/VERSION`
++  case $host_os in
++   *darwin* ) 
++ 	       EXE=""
++               shlibdir=$libdir
++               SHLIB=.dylib
++               SHLIBVERSION=.$VERSION$SHLIB;;
++   *cygwin*|*mingw* ) 
++               LDFLAGS="-Wl,--no-undefined $LDFLAGS"
++               shlibdir=$bindir
++ 	       EXE=.exe
++               SHLIB=""
++               SHLIBVERSION=-$VERSION.dll;;
++          * )  EXE=""
++               CFLAGS="-fPIC $CFLAGS"
++               shlibdir=$libdir
++               SHLIB=.so
++               SHLIBVERSION=$SHLIB.$VERSION;;
++  esac
+    # define executable suffix; this is needed for `make clean'
+ 
+ 
+diff --git a/configure.in b/configure.in
+index 14d7d29..28ca99c 100644
+--- a/configure.in
++++ b/configure.in
+@@ -36,17 +36,32 @@ case $host_cpu in
+ esac	
+ 
+ dnl Check if we are on a Windows platform.
++VERSION=`cat $srcdir/VERSION`
+ case $host_os in
+-    *cygwin*|*mingw* ) 
+-	EXE=.exe
+-	HOST_IS_WINDOWS=yes
+-	;;
++    *darwin* )
++               EXE=""
++               shlibdir=$libdir
++               SHLIB=.dylib
++               SHLIBVERSION=.$VERSION$SHLIB;;
++    *cygwin*|*mingw* )
++               LDFLAGS="-Wl,--no-undefined $LDFLAGS"
++               shlibdir=$bindir
++               EXE=.exe
++               SHLIB=""
++               SHLIBVERSION=-$VERSION.dll;;
+     * )
+-	EXE=""
+-	;;
++               CFLAGS="-fPIC $CFLAGS"
++               EXE=""
++               shlibdir=$libdir
++               SHLIB=.so
++               SHLIBVERSION=$SHLIB.$VERSION;;
+ esac
++  
++AC_SUBST(host_os)
++AC_SUBST(shlibdir)
+ AC_SUBST(EXE)   # define executable suffix; this is needed for `make clean'
+-
++AC_SUBST(SHLIB)   # define library suffix; this is needed for `make clean'
++AC_SUBST(SHLIBVERSION)   # define library suffix; this is needed for `make clean'
+ 
+ AC_ARG_ENABLE(kernel-linux,
+   [AS_HELP_STRING([--enable-kernel-linux],
+@@ -104,7 +119,7 @@ if test "x$ac_cv_func_socket" = "xno"; then
+   AC_CHECK_LIB(socket, socket)
+   AC_MSG_CHECKING([for socket in -lwsock32])
+   SAVELIBS="$LIBS"
+-  LIBS="$LIBS -lwsock32"
++  LIBS="$LIBS -lwsock32 -lws2_32"
+   AC_TRY_LINK([
+ #include <winsock2.h>
+ ],[

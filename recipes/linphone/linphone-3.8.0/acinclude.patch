@@ -1,0 +1,42 @@
+diff -urN a/mediastreamer2/acinclude.m4 b/mediastreamer2/acinclude.m4
+--- a/mediastreamer2/acinclude.m4	2014-02-14 08:45:55.180493621 +0100
++++ b/mediastreamer2/acinclude.m4	2014-02-14 08:47:41.141310878 +0100
+@@ -189,14 +189,10 @@
+ 		  	  esac],[enable_xv=$enable_x11_default])
+ 
+ 			if test "$enable_xv" = "true"; then
+-				AC_CHECK_HEADERS(X11/extensions/Xv.h,[] ,[enable_xv=false])
+-				AC_CHECK_HEADERS(X11/extensions/Xvlib.h,[] ,[enable_xv=false],[
+-					#include <X11/Xlib.h>
+-				])
+-				AC_CHECK_LIB(Xv,XvCreateImage,[LIBS="$LIBS -lXv"],[enable_xv=false])
+-				if test "$enable_xv" = "false" ; then
+-					AC_MSG_ERROR([No X video output API found. Please install X11+Xv headers.])
+-				fi
++				PKG_CHECK_MODULES(XV, xv, 
++					[AC_SUBST(XV_PKG,xv)],
++					[AC_MSG_ERROR([No X video output API found. Please install X11+Xv headers.])]
++				)
+ 			fi
+ 		fi
+ 
+@@ -281,6 +277,7 @@
+ 			VIDEO_CFLAGS="$VIDEO_CFLAGS -DHAVE_GL"
+ 		fi
+ 		if test "$enable_xv" = "true"; then
++			VIDEO_LIBS="$VIDEO_LIBS -lXv"
+ 			VIDEO_CFLAGS="$VIDEO_CFLAGS -DHAVE_XV"
+ 		fi
+ 	fi
+diff -urN a/mediastreamer2/mediastreamer.pc.in b/mediastreamer2/mediastreamer.pc.in
+--- a/mediastreamer2/mediastreamer.pc.in	2014-02-14 08:45:55.252491181 +0100
++++ b/mediastreamer2/mediastreamer.pc.in	2014-02-14 08:47:41.141310878 +0100
+@@ -5,7 +5,7 @@
+ 
+ Name: mediastreamer 
+ Description: A mediastreaming library for telephony applications
+-Requires: ortp
++Requires: ortp @XV_PKG@
+ Version: @MEDIASTREAMER_VERSION@
+ Libs: -L@libdir@ -lmediastreamer_base -lmediastreamer_voip
+ Cflags: -I@includedir@ @MS_PUBLIC_CFLAGS@

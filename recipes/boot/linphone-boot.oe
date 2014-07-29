@@ -1,0 +1,17 @@
+DESCRIPTION = "Linphone booter"
+LICENSE = "Proprietary"
+
+RECIPE_TYPES = "machine native"
+
+do_install() {
+  mkdir ${D}/usr/
+  [ -f ../run.bat ] && install -m 0755 ../run.bat ${D}/usr/
+  [ -f ../run.sh ] && install -m 0755 ../run.sh ${D}/usr/
+  echo "Ok"
+}
+
+SRC_URI:>HOST_KERNEL_darwin = " file://run.sh"
+SRC_URI:>HOST_KERNEL_linux = " file://run.sh"
+SRC_URI:>HOST_LIBC_mingw = " file://run.bat"
+
+FILES_${PN} = "/usr/run.*"

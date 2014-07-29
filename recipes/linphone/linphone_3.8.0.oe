@@ -1,0 +1,6 @@
+require linphone.inc
+
+S = "${SRCDIR}/linphone/"
+
+SRC_URI += "git://git.linphone.org/linphone.git;commit=0e9a92ef5adf0a0a12fdb237c49f1b483f23b836"
+SRC_URI += "file://darwin3.patch file://darwin2.patch file://acinclude.patch file://git.patch file://casts.patch file://mmr.patch file://common.patch file://linux-gnu.patch file://multiple_fix.patch file://darwin.patch file://cxx.patch file://clang.patch file://clang2.patch"

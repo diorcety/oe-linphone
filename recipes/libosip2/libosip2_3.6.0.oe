@@ -1,0 +1,3 @@
+require libosip2.inc
+
+SRC_URI:>HOST_LIBC_mingw = " file://wincrypt.patch"

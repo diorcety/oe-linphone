@@ -1,0 +1,8 @@
+require libsrtp.inc
+
+S = "${SRCDIR}/${PN}"
+
+SRC_URI = "git://github.com/cisco/libsrtp.git;branch=master;protocol=https"
+SRC_URI += "file://shared.patch"
+SRC_URI += "file://name_conflicts_fix.patch"
+SRC_URI += "file://static_shared.patch"

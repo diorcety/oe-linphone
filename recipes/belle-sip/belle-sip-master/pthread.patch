@@ -1,0 +1,19 @@
+diff --git a/configure.ac b/configure.ac
+index 7138f28..1b2df36 100755
+--- a/configure.ac
++++ b/configure.ac
+@@ -342,8 +342,14 @@ postdeps_CXX=`echo " $postdeps_CXX " | sed 's, -lstdc++ ,,g'`
+ # Checks for library functions.
+ AC_CHECK_LIB(rt, clock_gettime)
+ AC_CHECK_LIB(dl, dlopen)
++case "$target_os" in
++	*mingw*)
++	;;
++	*)
+ AC_CHECK_LIB(pthread, pthread_getspecific,,
+     [AC_MSG_ERROR([pthread library not found])])
++	;;
++esac
+ 
+ AC_CONFIG_FILES(
+ [

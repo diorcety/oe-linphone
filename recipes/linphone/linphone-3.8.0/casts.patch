@@ -1,0 +1,534 @@
+diff -urN a/console/commands.c b/console/commands.c
+--- a/console/commands.c	2014-04-24 23:34:02.306453109 +0200
++++ b/console/commands.c	2014-04-24 23:36:14.822309771 +0200
+@@ -2438,7 +2438,7 @@
+ 			tmp=linphone_call_get_remote_address_as_string (call);
+ 			flag=in_conference ? "conferencing" : "";
+ 			flag=linphone_call_has_transfer_pending(call) ? "transfer pending" : flag;
+-			linphonec_out("%-2i | %-35s | %-15s | %s\n",(int)(long)linphone_call_get_user_pointer(call),
++			linphonec_out("%-2i | %-35s | %-15s | %s\n",(int)(long)(uintptr_t)linphone_call_get_user_pointer(call),
+ 						  tmp,linphone_call_state_to_string(linphone_call_get_state(call))+strlen("LinphoneCall"),flag);
+ 			ms_free(tmp);
+ 		}
+diff -urN a/console/linphonec.c b/console/linphonec.c
+--- a/console/linphonec.c	2014-04-24 23:34:02.306453109 +0200
++++ b/console/linphonec.c	2014-04-24 23:36:14.822309771 +0200
+@@ -182,7 +182,7 @@
+ 
+ void linphonec_call_identify(LinphoneCall* call){
+ 	static long callid=1;
+-	linphone_call_set_user_pointer (call,(void*)callid);
++	linphone_call_set_user_pointer (call,(void*)(uintptr_t)callid);
+ 	callid++;
+ }
+ 
+@@ -190,7 +190,7 @@
+ 	const MSList *elem=linphone_core_get_calls(linphonec);
+ 	for (;elem!=NULL;elem=elem->next){
+ 		LinphoneCall *call=(LinphoneCall*)elem->data;
+-		if (linphone_call_get_user_pointer (call)==(void*)id){
++		if (linphone_call_get_user_pointer (call)==(void*)(uintptr_t)id){
+ 			return call;
+ 		}
+ 	}
+@@ -286,7 +286,7 @@
+ 	char *remote=linphone_call_get_remote_address_as_string(call);
+ 	if (new_call_state==LinphoneCallConnected){
+ 		linphonec_out("The distant endpoint %s of call %li has been transfered, you can safely close the call.\n",
+-		              remote,(long)linphone_call_get_user_pointer (call));
++		              remote,(long)(uintptr_t)linphone_call_get_user_pointer (call));
+ 	}
+ 	ms_free(remote);
+ }
+@@ -326,7 +326,7 @@
+ }
+ 
+ static void linphonec_call_encryption_changed(LinphoneCore *lc, LinphoneCall *call, bool_t encrypted, const char *auth_token) {
+-	long id=(long)linphone_call_get_user_pointer (call);
++	long id=(long)(uintptr_t)linphone_call_get_user_pointer (call);
+ 	if (!encrypted) {
+ 		linphonec_out("Call %i is not fully encrypted and auth token is %s.\n", id,
+ 				(auth_token != NULL) ? auth_token : "absent");
+@@ -338,7 +338,7 @@
+ 
+ static void linphonec_call_state_changed(LinphoneCore *lc, LinphoneCall *call, LinphoneCallState st, const char *msg){
+ 	char *from=linphone_call_get_remote_address_as_string(call);
+-	long id=(long)linphone_call_get_user_pointer (call);
++	long id=(long)(uintptr_t)linphone_call_get_user_pointer (call);
+ 	switch(st){
+ 		case LinphoneCallEnd:
+ 			linphonec_out("Call %i with %s ended (%s).\n", id, from, linphone_reason_to_string(linphone_call_get_reason(call)));
+@@ -361,7 +361,7 @@
+ 		case LinphoneCallIncomingReceived:
+ 			linphonec_call_identify(call);
+ 			linphone_call_enable_camera (call,linphonec_camera_enabled);
+-			id=(long)linphone_call_get_user_pointer (call);
++			id=(long)(uintptr_t)linphone_call_get_user_pointer (call);
+ 			linphonec_set_caller(from);
+ 			linphonec_out("Receiving new incoming call from %s, assigned id %i\n", from,id);
+ 			if ( auto_answer)  {
+@@ -377,7 +377,7 @@
+ 		break;
+ 		case LinphoneCallOutgoingInit:
+ 			linphonec_call_identify(call);
+-			id=(long)linphone_call_get_user_pointer (call);
++			id=(long)(uintptr_t)linphone_call_get_user_pointer (call);
+ 			linphonec_out("Establishing call id to %s, assigned id %i\n", from,id);
+ 		break;
+ 		case LinphoneCallUpdatedByRemote:
+diff -urN a/coreapi/bellesip_sal/sal_impl.c b/coreapi/bellesip_sal/sal_impl.c
+--- a/coreapi/bellesip_sal/sal_impl.c	2014-04-24 23:34:02.306453109 +0200
++++ b/coreapi/bellesip_sal/sal_impl.c	2014-04-24 23:36:14.822309771 +0200
+@@ -721,9 +721,6 @@
+ 	return ms_list_copy(sal->pending_auths);
+ }
+ 
+-#define payload_type_set_number(pt,n)	(pt)->user_data=(void*)((long)n);
+-#define payload_type_get_number(pt)		((int)(long)(pt)->user_data)
+-
+ /*misc*/
+ void sal_get_default_local_ip(Sal *sal, int address_family, char *ip, size_t iplen){
+ 	strncpy(ip,address_family==AF_INET6 ? "::1" : "127.0.0.1",iplen);
+diff -urN a/coreapi/quality_reporting.c b/coreapi/quality_reporting.c
+--- a/coreapi/quality_reporting.c	2014-04-24 23:34:02.318453126 +0200
++++ b/coreapi/quality_reporting.c	2014-04-25 00:16:40.820992947 +0200
+@@ -75,7 +75,7 @@
+ 	if (ret == BELLE_SIP_BUFFER_OVERFLOW) {
+ 		// some compilers complain that size_t cannot be formatted as unsigned long, hence forcing cast
+ 		ms_warning("Buffer was too small to contain the whole report - doubling its size from %lu to %lu",
+-			(unsigned long)*buff_size, (unsigned long)2 * *buff_size);
++			(unsigned long)*buff_size, (unsigned long)(2 * *buff_size));
+ 		*buff_size += 2048;
+ 		*buff = (char *) ms_realloc(*buff, *buff_size);
+ 
+Les fichiers binaires a/.git/index et b/.git/index sont différents
+Les fichiers binaires a/.git/modules/mediastreamer2/index et b/.git/modules/mediastreamer2/index sont différents
+Les fichiers binaires a/.git/modules/oRTP/index et b/.git/modules/oRTP/index sont différents
+diff -urN a/gtk/main.c b/gtk/main.c
+--- a/gtk/main.c	2014-04-24 23:34:02.322453132 +0200
++++ b/gtk/main.c	2014-04-24 23:36:14.826309935 +0200
+@@ -632,7 +632,7 @@
+ #ifndef WIN32
+ 			w=gdk_window_foreign_new((GdkNativeWindow)id);
+ #else
+-			w=gdk_window_foreign_new((HANDLE)id);
++			w=gdk_window_foreign_new((HANDLE)(uintptr_t)id);
+ #endif
+ 			if (w) {
+ 				set_video_window_decorations(w);
+@@ -651,7 +651,7 @@
+ #ifndef WIN32
+ 			w=gdk_window_foreign_new((GdkNativeWindow)id);
+ #else
+-			w=gdk_window_foreign_new((HANDLE)id);
++			w=gdk_window_foreign_new((HANDLE)(uintptr_t)id);
+ #endif
+ 			if (w) {
+ 				set_video_window_decorations(w);
+diff -urN a/include/sal/sal.h b/include/sal/sal.h
+--- a/include/sal/sal.h	2014-04-24 23:34:02.326453137 +0200
++++ b/include/sal/sal.h	2014-04-24 23:36:14.826309935 +0200
+@@ -663,8 +663,8 @@
+ 
+ 
+ 
+-#define payload_type_set_number(pt,n)		(pt)->user_data=(void*)((long)n);
+-#define payload_type_get_number(pt)		((int)(long)(pt)->user_data)
++#define payload_type_set_number(pt,n)		(pt)->user_data=(void*)(uintptr_t)((long)n);
++#define payload_type_get_number(pt)		((int)(long)(uintptr_t)(pt)->user_data)
+ 
+ /*misc*/
+ void sal_get_default_local_ip(Sal *sal, int address_family, char *ip, size_t iplen);
+diff -urN a/mediastreamer2/src/audiofilters/winsnd3.c b/mediastreamer2/src/audiofilters/winsnd3.c
+--- a/mediastreamer2/src/audiofilters/winsnd3.c	2014-04-24 23:34:43.314475371 +0200
++++ b/mediastreamer2/src/audiofilters/winsnd3.c	2014-04-24 23:36:14.826309935 +0200
+@@ -289,7 +289,7 @@
+ 	hdr->lpData=(LPSTR)m->b_wptr;
+ 	hdr->dwBufferLength=buflen;
+ 	hdr->dwFlags = 0;
+-	hdr->dwUser = (DWORD)m;
++	hdr->dwUser = (DWORD)(uintptr_t)m;
+ 	mr = waveInPrepareHeader (d->indev,hdr,sizeof(*hdr));
+ 	if (mr != MMSYSERR_NOERROR){
+ 		ms_error("waveInPrepareHeader() error");
+@@ -306,8 +306,8 @@
+ read_callback (HWAVEIN waveindev, UINT uMsg, DWORD dwInstance, DWORD dwParam1,
+                 DWORD dwParam2)
+ {
+-	WAVEHDR *wHdr=(WAVEHDR *) dwParam1;
+-	MSFilter *f=(MSFilter *)dwInstance;
++	WAVEHDR *wHdr=(WAVEHDR *)(uintptr_t) dwParam1;
++	MSFilter *f=(MSFilter *)(uintptr_t)dwInstance;
+ 	WinSnd *d=(WinSnd*)f->data;
+ 	mblk_t *m;
+ 	int bsize;
+@@ -358,12 +358,12 @@
+ 	if (d->dev_id != WAVE_MAPPER)
+ 		dwFlag = WAVE_MAPPED | CALLBACK_FUNCTION;
+ 	mr = waveInOpen (&d->indev, d->dev_id, &d->wfx,
+-	            (DWORD) read_callback, (DWORD)f, dwFlag);
++	            (DWORD)(uintptr_t)read_callback, (DWORD)(uintptr_t)f, dwFlag);
+ 	if (mr != MMSYSERR_NOERROR)
+ 	{
+ 	    ms_error("Failed to prepare windows sound device. (waveInOpen:0x%i)", mr);
+ 		mr = waveInOpen (&d->indev, WAVE_MAPPER, &d->wfx,
+-					(DWORD) read_callback, (DWORD)f, CALLBACK_FUNCTION);
++					(DWORD)(uintptr_t)read_callback, (DWORD)(uintptr_t)f, CALLBACK_FUNCTION);
+ 		if (mr != MMSYSERR_NOERROR)
+ 		{
+ 			d->indev=NULL;
+@@ -451,8 +451,8 @@
+ write_callback(HWAVEOUT outdev, UINT uMsg, DWORD dwInstance,
+                  DWORD dwParam1, DWORD dwParam2)
+ {
+-	WAVEHDR *hdr=(WAVEHDR *) dwParam1;
+-	WinSnd *d=(WinSnd*)dwInstance;
++	WAVEHDR *hdr=(WAVEHDR *)(uintptr_t)dwParam1;
++	WinSnd *d=(WinSnd*)(uintptr_t)dwInstance;
+ 	
+ 	switch (uMsg){
+ 		case WOM_OPEN:
+@@ -489,12 +489,12 @@
+ 	if (d->dev_id != WAVE_MAPPER)
+ 		dwFlag = WAVE_MAPPED | CALLBACK_FUNCTION;
+ 	mr = waveOutOpen (&d->outdev, d->dev_id, &d->wfx,
+-	            (DWORD) write_callback, (DWORD)d, dwFlag);
++	            (DWORD)(uintptr_t)write_callback, (DWORD)(uintptr_t)d, dwFlag);
+ 	if (mr != MMSYSERR_NOERROR)
+ 	{
+ 		ms_error("Failed to open windows sound device %i. (waveOutOpen:0x%i)",d->dev_id, mr);
+ 		mr = waveOutOpen (&d->outdev, WAVE_MAPPER, &d->wfx,
+-					(DWORD) write_callback, (DWORD)d, CALLBACK_FUNCTION);
++					(DWORD)(uintptr_t)write_callback, (DWORD)(uintptr_t)d, CALLBACK_FUNCTION);
+ 		if (mr != MMSYSERR_NOERROR)
+ 		{
+ 			ms_error("Failed to open windows sound device %i. (waveOutOpen:0x%i)",d->dev_id, mr);
+@@ -546,7 +546,7 @@
+ 
+ static void playout_buf(WinSnd *d, WAVEHDR *hdr, mblk_t *m){
+ 	MMRESULT mr;
+-	hdr->dwUser=(DWORD)m;
++	hdr->dwUser=(DWORD)(uintptr_t)m;
+ 	hdr->lpData=(LPSTR)m->b_rptr;
+ 	hdr->dwBufferLength=msgdsize(m);
+ 	hdr->dwFlags = 0;
+diff -urN a/mediastreamer2/src/base/eventqueue.c b/mediastreamer2/src/base/eventqueue.c
+--- a/mediastreamer2/src/base/eventqueue.c	2014-04-24 23:34:43.314475371 +0200
++++ b/mediastreamer2/src/base/eventqueue.c	2014-04-24 23:52:40.786526798 +0200
+@@ -69,7 +69,7 @@
+ 		q->wptr=q->buffer;
+ 		nextpos=q->wptr+size;
+ 	}
+-	*(long*)q->wptr=(long)f;
++	*(long*)q->wptr=(long)(uintptr_t)f;
+ 	*(long*)(q->wptr+8)=(long)ev_id;
+ 	if (argsize>0) memcpy(q->wptr+16,arg,argsize);
+ 	q->wptr=nextpos;
+@@ -80,7 +80,7 @@
+ 
+ static int parse_event(uint8_t *rptr,MSFilter **f, unsigned int *id, void **data, int *argsize){
+ 	int evsize;
+-	*f=(MSFilter *)*(long*)(rptr);
++	*f=(MSFilter *)(intptr_t)*(long*)(rptr);
+ 	*id=(unsigned int)*(long*)(rptr+8);
+ 	*argsize=(*id) & 0xff;
+ 	evsize=(*argsize)+16;
+diff -urN a/mediastreamer2/src/videofilters/drawdib-display.c b/mediastreamer2/src/videofilters/drawdib-display.c
+--- a/mediastreamer2/src/videofilters/drawdib-display.c	2014-04-24 23:34:43.318475370 +0200
++++ b/mediastreamer2/src/videofilters/drawdib-display.c	2014-04-24 23:36:14.826309935 +0200
+@@ -248,7 +248,11 @@
+ 	if (dd->window==NULL) {
+ 		if(dd->auto_window) {
+ 			dd->window=create_window(dd->wsize.width,dd->wsize.height);
+-			SetWindowLong(dd->window,GWL_USERDATA,(long)dd);
++#ifndef _WIN64
++			SetWindowLong(dd->window,GWL_USERDATA,(long)(uintptr_t)dd);
++#else //_WIN64
++			SetWindowLongPtr(dd->window,GWLP_USERDATA,(long)(uintptr_t)dd);
++#endif //_WIN64
+ 		}
+ 	}
+ 	if (dd->ddh==NULL)
+@@ -488,7 +492,7 @@
+ static int get_native_window_id(MSFilter *f, void *data){
+ 	DDDisplay *obj=(DDDisplay*)f->data;
+ 	if(obj->auto_window) {
+-		*(long*)data=(long)obj->window;
++		*(long*)data=(long)(uintptr_t)obj->window;
+ 	} else {
+ 		*(unsigned long*)data=MS_FILTER_VIDEO_NONE;
+ 	}
+@@ -499,7 +503,7 @@
+ 	DDDisplay *obj=(DDDisplay*)f->data;
+ 	unsigned long winId = *((unsigned long*)data);
+ 	if(winId != MS_FILTER_VIDEO_NONE) {
+-		obj->window=(HWND)(*(long*)data);
++		obj->window=(HWND)(uintptr_t)(*(long*)data);
+ 		obj->own_window=FALSE;
+ 		obj->auto_window=TRUE;
+ 	} else {
+diff -urN a/mediastreamer2/src/videofilters/msdscap-mingw.cc b/mediastreamer2/src/videofilters/msdscap-mingw.cc
+--- a/mediastreamer2/src/videofilters/msdscap-mingw.cc	2014-04-24 23:34:43.322475369 +0200
++++ b/mediastreamer2/src/videofilters/msdscap-mingw.cc	2014-04-24 23:36:14.830309978 +0200
+@@ -959,7 +959,7 @@
+ static MSFilter * ms_dshow_create_reader(MSWebCam *obj){
+ 	MSFilter *f=ms_filter_new_from_desc(&ms_dscap_desc);
+ 	DSCapture *s=(DSCapture*)f->data;
+-	s->setDeviceIndex((int)obj->data);
++	s->setDeviceIndex((int)(uintptr_t)obj->data);
+ 	return f;
+ }
+ 
+diff -urN a/mediastreamer2/src/voip/audiostream.c b/mediastreamer2/src/voip/audiostream.c
+--- a/mediastreamer2/src/voip/audiostream.c	2014-04-24 23:34:43.322475369 +0200
++++ b/mediastreamer2/src/voip/audiostream.c	2014-04-24 23:58:26.434903199 +0200
+@@ -260,7 +260,7 @@
+ }
+ 
+ static OrtpRtcpXrPlcStatus audio_stream_get_rtcp_xr_plc_status(unsigned long userdata) {
+-	AudioStream *stream = (AudioStream *)userdata;
++	AudioStream *stream = (AudioStream *)(intptr_t)userdata;
+ 	if ((stream->features & AUDIO_STREAM_FEATURE_PLC) != 0) {
+ 		int decoder_have_plc = 0;
+ 		if (ms_filter_has_method(stream->ms.decoder, MS_AUDIO_DECODER_HAVE_PLC)) {
+@@ -276,7 +276,7 @@
+ }
+ 
+ static int audio_stream_get_rtcp_xr_signal_level(unsigned long userdata) {
+-	AudioStream *stream = (AudioStream *)userdata;
++	AudioStream *stream = (AudioStream *)(intptr_t)userdata;
+ 	if ((stream->features & AUDIO_STREAM_FEATURE_VOL_RCV) != 0) {
+ 		float volume;
+ 		ms_filter_call_method(stream->volrecv, MS_VOLUME_GET_MAX, &volume);
+@@ -286,7 +286,7 @@
+ }
+ 
+ static int audio_stream_get_rtcp_xr_noise_level(unsigned long userdata) {
+-	AudioStream *stream = (AudioStream *)userdata;
++	AudioStream *stream = (AudioStream *)(intptr_t)userdata;
+ 	if ((stream->features & AUDIO_STREAM_FEATURE_VOL_RCV) != 0) {
+ 		float volume;
+ 		ms_filter_call_method(stream->volrecv, MS_VOLUME_GET_MIN, &volume);
+@@ -296,12 +296,12 @@
+ }
+ 
+ static float audio_stream_get_rtcp_xr_average_quality_rating(unsigned long userdata) {
+-	AudioStream *stream = (AudioStream *)userdata;
++	AudioStream *stream = (AudioStream *)(intptr_t)userdata;
+ 	return audio_stream_get_average_quality_rating(stream);
+ }
+ 
+ static float audio_stream_get_rtcp_xr_average_lq_quality_rating(unsigned long userdata) {
+-	AudioStream *stream = (AudioStream *)userdata;
++	AudioStream *stream = (AudioStream *)(intptr_t)userdata;
+ 	return audio_stream_get_average_lq_quality_rating(stream);
+ }
+ 
+@@ -322,7 +322,7 @@
+ 		audio_stream_get_rtcp_xr_noise_level,
+ 		audio_stream_get_rtcp_xr_average_quality_rating,
+ 		audio_stream_get_rtcp_xr_average_lq_quality_rating,
+-		(unsigned long)stream
++		(unsigned long)(intptr_t)stream
+ 	};
+ 
+ 	rtp_session_set_profile(rtps,profile);
+@@ -344,8 +344,8 @@
+ 		stream->dtmfgen=ms_filter_new(MS_DTMF_GEN_ID);
+ 	else
+ 		stream->dtmfgen=NULL;
+-	rtp_session_signal_connect(rtps,"telephone-event",(RtpCallback)on_dtmf_received,(unsigned long)stream);
+-	rtp_session_signal_connect(rtps,"payload_type_changed",(RtpCallback)mediastream_payload_type_changed,(unsigned long)&stream->ms);
++	rtp_session_signal_connect(rtps,"telephone-event",(RtpCallback)on_dtmf_received,(unsigned long)(uintptr_t)stream);
++	rtp_session_signal_connect(rtps,"payload_type_changed",(RtpCallback)mediastream_payload_type_changed,(unsigned long)(uintptr_t)&stream->ms);
+ 	/* creates the local part */
+ 	if (captcard!=NULL){
+ 		if (stream->soundread==NULL)
+diff -urN a/mediastreamer2/src/voip/mediastream.c b/mediastreamer2/src/voip/mediastream.c
+--- a/mediastreamer2/src/voip/mediastream.c	2014-04-24 23:34:43.326475368 +0200
++++ b/mediastreamer2/src/voip/mediastream.c	2014-04-24 23:39:29.529299688 +0200
+@@ -155,8 +155,8 @@
+ 	rtp_session_enable_adaptive_jitter_compensation(rtpr, TRUE);
+ 	rtp_session_set_symmetric_rtp(rtpr, TRUE);
+ 	rtp_session_set_local_addr(rtpr, ipv6 ? "::" : "0.0.0.0", loc_rtp_port, loc_rtcp_port);
+-	rtp_session_signal_connect(rtpr, "timestamp_jump", (RtpCallback)rtp_session_resync, (long)NULL);
+-	rtp_session_signal_connect(rtpr, "ssrc_changed", (RtpCallback)rtp_session_resync, (long)NULL);
++	rtp_session_signal_connect(rtpr, "timestamp_jump", (RtpCallback)rtp_session_resync, (long)(uintptr_t)NULL);
++	rtp_session_signal_connect(rtpr, "ssrc_changed", (RtpCallback)rtp_session_resync, (long)(uintptr_t)NULL);
+ 	rtp_session_set_ssrc_changed_threshold(rtpr, 0);
+ 	rtp_session_set_rtcp_report_interval(rtpr, 2500);	/* At the beginning of the session send more reports. */
+ 	disable_checksums(rtp_session_get_rtp_socket(rtpr));
+@@ -458,7 +458,7 @@
+ }
+ 
+ void mediastream_payload_type_changed(RtpSession *session, unsigned long data) {
+-	MediaStream *stream = (MediaStream *)data;
++	MediaStream *stream = (MediaStream *)(uintptr_t)data;
+ 	int pt = rtp_session_get_recv_payload_type(stream->sessions.rtp_session);
+ 	media_stream_change_decoder(stream, pt);
+ }
+diff -urN a/mediastreamer2/src/voip/videostream.c b/mediastreamer2/src/voip/videostream.c
+--- a/mediastreamer2/src/voip/videostream.c	2014-04-24 23:34:43.326475368 +0200
++++ b/mediastreamer2/src/voip/videostream.c	2014-04-24 23:38:56.601515189 +0200
+@@ -342,7 +342,7 @@
+ 	rtp_session_set_jitter_compensation(rtps,jitt_comp);
+ 
+ 	rtp_session_signal_connect(stream->ms.sessions.rtp_session,"payload_type_changed",
+-			(RtpCallback)mediastream_payload_type_changed,(unsigned long)&stream->ms);
++			(RtpCallback)mediastream_payload_type_changed,(unsigned long)(uintptr_t)&stream->ms);
+ 
+ 	rtp_session_get_jitter_buffer_params(stream->ms.sessions.rtp_session,&jbp);
+ 	jbp.max_packets=1000;//needed for high resolution video
+diff -urN a/mediastreamer2/tools/bench.c b/mediastreamer2/tools/bench.c
+--- a/mediastreamer2/tools/bench.c	2014-04-24 23:34:43.350475361 +0200
++++ b/mediastreamer2/tools/bench.c	2014-04-24 23:36:14.834309989 +0200
+@@ -90,8 +90,8 @@
+ 	rtp_session_enable_adaptive_jitter_compensation(rtpr,FALSE);
+ 	rtp_session_set_symmetric_rtp(rtpr,TRUE);
+ 	rtp_session_set_local_addr(rtpr,"0.0.0.0",locport,locport+1);
+-	rtp_session_signal_connect(rtpr,"timestamp_jump",(RtpCallback)rtp_session_resync,(long)NULL);
+-	rtp_session_signal_connect(rtpr,"ssrc_changed",(RtpCallback)rtp_session_resync,(long)NULL);
++	rtp_session_signal_connect(rtpr,"timestamp_jump",(RtpCallback)rtp_session_resync,(long)(uintptr_t)NULL);
++	rtp_session_signal_connect(rtpr,"ssrc_changed",(RtpCallback)rtp_session_resync,(long)(uintptr_t)NULL);
+ 	return rtpr;
+ }
+ 
+diff -urN a/oRTP/src/port.c b/oRTP/src/port.c
+--- a/oRTP/src/port.c	2014-04-24 23:35:13.542450605 +0200
++++ b/oRTP/src/port.c	2014-04-24 23:36:14.834309989 +0200
+@@ -247,7 +247,7 @@
+ 	thread_param_t *params=(thread_param_t*)data;
+ 	void *ret=params->func(params->arg);
+ 	ortp_free(data);
+-	return (DWORD)ret;
++	return (DWORD)(uintptr_t)ret;
+ }
+ 
+ #if defined _WIN32_WCE
+diff -urN a/oRTP/src/posixtimer.c b/oRTP/src/posixtimer.c
+--- a/oRTP/src/posixtimer.c	2014-04-24 23:35:13.542450605 +0200
++++ b/oRTP/src/posixtimer.c	2014-04-24 23:36:14.834309989 +0200
+@@ -134,7 +134,7 @@
+ 
+ void win_timer_init(void)
+ {
+-        timerId = timeSetEvent(TIME_INTERVAL,10,timerCb,0,TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
++        timerId = timeSetEvent(TIME_INTERVAL,10,(LPTIMECALLBACK)timerCb,0,TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
+         TimeEvent = CreateEvent(NULL,FALSE,FALSE,NULL);
+ 
+         late_ticks = 0;
+diff -urN a/oRTP/src/rtcpparse.c b/oRTP/src/rtcpparse.c
+--- a/oRTP/src/rtcpparse.c	2014-04-24 23:35:13.542450605 +0200
++++ b/oRTP/src/rtcpparse.c	2014-04-24 23:36:14.834309989 +0200
+@@ -169,7 +169,7 @@
+ 
+ 				if (type==RTCP_SDES_END){
+ 					/* pad to next 32bit boundary*/
+-					rptr=(uint8_t*)(((unsigned long)rptr+4) & ~0x3);
++					rptr=(uint8_t*)(uintptr_t)(((unsigned long)(uintptr_t)rptr+4) & ~0x3);
+ 					nchunk++;
+ 					if (nchunk<rtcp_common_header_get_rc(ch)){
+ 						chunk_start=TRUE;
+diff -urN a/oRTP/src/rtpparse.c b/oRTP/src/rtpparse.c
+--- a/oRTP/src/rtpparse.c	2014-04-24 23:35:13.542450605 +0200
++++ b/oRTP/src/rtpparse.c	2014-04-24 23:36:14.834309989 +0200
+@@ -285,7 +285,7 @@
+ 		/* detect timestamp important jumps in the future, to workaround stupid rtp senders */
+ 		if (RTP_TIMESTAMP_IS_NEWER_THAN(rtp->timestamp,session->rtp.rcv_last_ts+session->rtp.ts_jump)){
+ 			ortp_debug("rtp_parse: timestamp jump ?");
+-			rtp_signal_table_emit2(&session->on_timestamp_jump,(long)&rtp->timestamp);
++			rtp_signal_table_emit2(&session->on_timestamp_jump,(long)(uintptr_t)&rtp->timestamp);
+ 		}
+ 		else if (RTP_TIMESTAMP_IS_STRICTLY_NEWER_THAN(session->rtp.rcv_last_ts,rtp->timestamp)){
+ 			/* don't queue packets older than the last returned packet to the application*/
+@@ -296,7 +296,7 @@
+ 			if ( RTP_TIMESTAMP_IS_STRICTLY_NEWER_THAN(session->rtp.rcv_last_ts, rtp->timestamp + session->rtp.ts_jump) ){
+ 				ortp_warning("rtp_parse: negative timestamp jump");
+ 				rtp_signal_table_emit2(&session->on_timestamp_jump,
+-							(long)&rtp->timestamp);
++							(long)(uintptr_t)&rtp->timestamp);
+ 			}
+ 			ortp_debug("rtp_parse: discarding too old packet (ts=%i)",rtp->timestamp);
+ 			freemsg(mp);
+diff -urN a/oRTP/src/rtpsession.c b/oRTP/src/rtpsession.c
+--- a/oRTP/src/rtpsession.c	2014-04-24 23:35:13.542450605 +0200
++++ b/oRTP/src/rtpsession.c	2014-04-24 23:36:14.838309966 +0200
+@@ -1139,7 +1139,7 @@
+ 		int msgsize=msgdsize(mp);
+ 		ortp_global_stats.recv += msgsize;
+ 		stream->stats.recv += msgsize;
+-		rtp_signal_table_emit2(&session->on_telephone_event_packet,(long)mp);
++		rtp_signal_table_emit2(&session->on_telephone_event_packet,(long)(uintptr_t)mp);
+ 		rtp_session_check_telephone_events(session,mp);
+ 		freemsg(mp);
+ 		mp=NULL;
+diff -urN a/oRTP/src/rtpsession_inet.c b/oRTP/src/rtpsession_inet.c
+--- a/oRTP/src/rtpsession_inet.c	2014-04-24 23:35:13.546450600 +0200
++++ b/oRTP/src/rtpsession_inet.c	2014-04-24 23:36:14.838309966 +0200
+@@ -975,8 +975,8 @@
+ 	}
+ 	if (error < 0){
+ 		if (session->on_network_error.count>0){
+-			rtp_signal_table_emit3(&session->on_network_error,(long)"Error sending RTP packet",INT_TO_POINTER(getSocketErrorCode()));
+-		}else ortp_warning ("Error sending rtp packet: %s ; socket=%i", getSocketError(), sockfd);
++			rtp_signal_table_emit3(&session->on_network_error,(long)(uintptr_t)"Error sending RTP packet",getSocketErrorCode());
++		}else ortp_warning ("Error sending rtp packet: %s ; socket=%i", getSocketError(), (int)sockfd);
+ 		session->rtp.send_errno=getSocketErrorCode();
+ 	}else{
+ 		update_sent_bytes(session,error);
+@@ -1021,10 +1021,10 @@
+ 		if (error < 0){
+ 			char host[65];
+ 			if (session->on_network_error.count>0){
+-				rtp_signal_table_emit3(&session->on_network_error,(long)"Error sending RTCP packet",INT_TO_POINTER(getSocketErrorCode()));
+-			}else ortp_warning ("Error sending rtcp packet: %s ; socket=%i; addr=%s", getSocketError(), session->rtcp.socket, ortp_inet_ntoa((struct sockaddr*)&session->rtcp.rem_addr,session->rtcp.rem_addrlen,host,sizeof(host)) );
++				rtp_signal_table_emit3(&session->on_network_error,(long)(uintptr_t)"Error sending RTCP packet",getSocketErrorCode());
++			}else ortp_warning ("Error sending rtcp packet: %s ; socket=%i; addr=%s", getSocketError(), (int)session->rtcp.socket, ortp_inet_ntoa((struct sockaddr*)&session->rtcp.rem_addr,session->rtcp.rem_addrlen,host,sizeof(host)) );
+ 		}
+-	}else ortp_message("Not sending rtcp report: sockfd=%i, rem_addrlen=%i, connected=%i",sockfd,session->rtcp.rem_addrlen,using_connected_socket);
++	}else ortp_message("Not sending rtcp report: sockfd=%i, rem_addrlen=%i, connected=%i",(int)sockfd,session->rtcp.rem_addrlen,using_connected_socket);
+ 	freemsg (m);
+ 	return error;
+ }
+@@ -1194,7 +1194,7 @@
+ 			if (error==-1 && !is_would_block_error((errnum=getSocketErrorCode())) )
+ 			{
+ 				if (session->on_network_error.count>0){
+-					rtp_signal_table_emit3(&session->on_network_error,(long)"Error receiving RTP packet",INT_TO_POINTER(getSocketErrorCode()));
++					rtp_signal_table_emit3(&session->on_network_error,(long)(uintptr_t)"Error receiving RTP packet",getSocketErrorCode());
+ 				}else ortp_warning("Error receiving RTP packet: %s, err num  [%i],error [%i]",getSocketError(),errnum,error);
+ #ifdef __ios
+ 				/*hack for iOS and non-working socket because of background mode*/
+@@ -1438,7 +1438,7 @@
+ 			else if (!is_would_block_error(errnum))
+ 			{
+ 				if (session->on_network_error.count>0){
+-					rtp_signal_table_emit3(&session->on_network_error,(long)"Error receiving RTCP packet",INT_TO_POINTER(errnum));
++					rtp_signal_table_emit3(&session->on_network_error,(long)(uintptr_t)"Error receiving RTCP packet",INT_TO_POINTER(errnum));
+ 				}else ortp_warning("Error receiving RTCP packet on port [%i]: %s.",session->rtcp.loc_port,getSocketError());
+ 				session->rtp.recv_errno=errnum;
+ 			}
+diff -urN a/oRTP/src/str_utils.c b/oRTP/src/str_utils.c
+--- a/oRTP/src/str_utils.c	2014-04-24 23:35:13.546450600 +0200
++++ b/oRTP/src/str_utils.c	2014-04-24 23:36:14.838309966 +0200
+@@ -294,7 +294,7 @@
+ 	size_t padcnt=0;
+ 	size_t i;
+ 	if (pad){
+-		padcnt= (size_t)(4L-( (long)(((long)mp->b_wptr)+size) % 4L)) % 4L;
++		padcnt= (size_t)(4L-( (long)(((long)(uintptr_t)mp->b_wptr)+size) % 4L)) % 4L;
+ 	}
+ 	if ((mp->b_wptr + size +padcnt) > mp->b_datap->db_lim){
+ 		/* buffer is not large enough: append a new block (with the same size ?)*/
+diff -urN a/oRTP/src/stun_udp.c b/oRTP/src/stun_udp.c
+--- a/oRTP/src/stun_udp.c	2014-04-24 23:35:13.546450600 +0200
++++ b/oRTP/src/stun_udp.c	2014-04-24 23:36:14.838309966 +0200
+@@ -182,7 +182,7 @@
+       }
+    }
+ 
+-	 ortp_debug("stun: opened port %i with fd %i\n", port, fd);
++	 ortp_debug("stun: opened port %i with fd %i\n", port, (int)fd);
+    
+    /* assert( fd != INVALID_SOCKET  ); */
+ 	

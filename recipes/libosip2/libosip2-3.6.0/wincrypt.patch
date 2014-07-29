@@ -1,0 +1,12 @@
+diff -urN libosip2-3.6.0/src/osipparser2/osip_port.c libosip2-3.6.0.mod/src/osipparser2/osip_port.c
+--- libosip2-3.6.0/src/osipparser2/osip_port.c	2011-08-12 17:21:16.000000000 +0200
++++ libosip2-3.6.0.mod/src/osipparser2/osip_port.c	2012-11-14 15:53:25.000000000 +0100
+@@ -70,7 +70,7 @@
+ #elif defined(WIN32)
+ #include <windows.h>
+ #ifdef WIN32_USE_CRYPTO
+-#include <Wincrypt.h>
++#include <wincrypt.h>
+ #endif
+ #endif
+ 

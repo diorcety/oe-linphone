@@ -1,0 +1,53 @@
+diff -urN a/configure.ac b/configure.ac
+--- a/configure.ac	2014-04-01 20:53:31.586270681 +0200
++++ b/configure.ac	2014-04-01 21:15:20.520866481 +0200
+@@ -335,15 +335,6 @@
+ 	fi
+ fi
+ 
+-case "$target" in
+-        #macosx 64 bits
+-        x86_64-*-darwin*)
+-                LIBS="$LIBS -mmacosx-version-min=10.6"
+-                CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.6"
+-                CFLAGS="$CFLAGS -mmacosx-version-min=10.6"
+-        ;;
+-esac
+-
+ dnl os-specific problems not handled by existing macros.
+ case "$host_os" in
+ 	*freebsd*)
+diff -urN a/mediastreamer2/configure.ac b/mediastreamer2/configure.ac
+--- a/mediastreamer2/configure.ac	2014-04-01 20:54:27.980937569 +0200
++++ b/mediastreamer2/configure.ac	2014-04-01 21:15:45.944160072 +0200
+@@ -165,11 +165,6 @@
+ 	;;
+ 	x86_64-*-darwin*|i686-*-darwin*)
+ 		macosx_found=yes
+-                LIBS="$LIBS -mmacosx-version-min=10.6"
+-                CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.6"
+-                CFLAGS="$CFLAGS -mmacosx-version-min=10.6"
+-		OBJCFLAGS="$OBJCFLAGS -mmacosx-version-min=10.6"
+-		
+ 	;;
+   	*mingw32ce)
+ 		CFLAGS="$CFLAGS -DINET6 -DORTP_INET6 -D_WIN32_WINNT=0x0501  -D_WIN32_WCE  -DORTP_STATIC"
+diff -urN a/oRTP/configure.ac b/oRTP/configure.ac
+--- a/oRTP/configure.ac	2014-04-01 20:55:05.616084602 +0200
++++ b/oRTP/configure.ac	2014-04-01 21:15:30.096598148 +0200
+@@ -125,15 +125,6 @@
+ posixtimer_interval=10000
+ PTHREAD_LDFLAGS=
+ 
+-case "$target" in
+-        #macosx 64 bits
+-        x86_64-*-darwin*)
+-                LIBS="$LIBS -mmacosx-version-min=10.6"
+-                CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.6"
+-                CFLAGS="$CFLAGS -mmacosx-version-min=10.6"
+-        ;;
+-esac
+-
+ case "$target_os" in
+ 	*hpux*) 
+ 		hpux_host=yes

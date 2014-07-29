@@ -1,0 +1,13 @@
+require belle-sip.inc
+
+S = "${SRCDIR}/belle-sip/"
+
+SRC_URI = "git://git.linphone.org/belle-sip.git;commit=eb3467af3e8f42c5a9cea36d4253bd66641413f3"
+SRC_URI += "file://gcc.patch"
+SRC_URI += "file://darwin.patch"
+SRC_URI += "file://casts.patch"
+SRC_URI += "file://min-max.patch"
+SRC_URI += "file://cxx.patch"
+SRC_URI += "file://pkg_config.patch"
+SRC_URI += "file://pthread.patch"
+SRC_URI:>HOST_KERNEL_linux = " file://linux-gnu.patch"

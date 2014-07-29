@@ -1,0 +1,4 @@
+require libeXosip2.inc
+
+SRC_URI += "file://mingw.patch"
+SRC_URI += "file://cert-windows.patch"

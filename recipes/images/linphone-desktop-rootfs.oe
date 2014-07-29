@@ -1,0 +1,161 @@
+DESCRIPTION = "Root filesystem for linphone"
+
+RDEPENDS = " \
+    target:gtk+-utils \
+    target:gtk+-locale \
+    target:gdk-pixbuf-utils \
+    target:pango-utils \
+    target:linphone \
+    target:linphone-locale \
+    target:linphone-boot \
+"
+
+RDEPENDS:>DEBUG = "target:linphone-dbg"
+
+RDEPENDS += "${RDEPENDS_SDK}"
+RDEPENDS_SDK:machine = " \
+    target:libstdc++ \
+    target:libc \
+    target:libgcc \
+    target:libm \
+"
+
+RDEPENDS_SDK:>HOST_KERNEL_linux = " \
+    target:libdl \
+    target:libpthread \
+    target:librt \
+    target:libutil \
+    target:libcrypt \
+    target:libresolv \
+"
+
+IMAGE_BASENAME = "${PN}-${DISTRO}-${MACHINE}"
+
+RDEPENDS_ROOTFS:HOST_KERNEL_linux  = " libXcursor libnsl libnss-compat libnss-nis libnss-files"
+RDEPENDS_ROOTFS:HOST_KERNEL_darwin  = " libnsl libnss-compat libnss-nis libnss-files"
+RDEPENDS_ROOTFS = ""
+
+inherit rootfs
+
+RECIPE_TYPES = "machine"
+
+DO_IMAGE_RPATH = ""
+DO_IMAGE_RPATH:HOST_KERNEL_darwin = "do_compile_rpath"
+DO_IMAGE_RPATH_HOST_INSTALLNAMETOOL ?= "${HOST_PREFIX}install_name_tool"
+do_compile[prefuncs] += "${DO_IMAGE_RPATH}"
+
+python do_compile_rpath() {
+    import os, magic, re
+    import stat, time
+    from subprocess import Popen, PIPE
+    from glob import glob
+    import oebakery # die, err, warn, info, debug
+    os.environ['PATH'] = d.getVar("PATH", True)
+    filemagic = magic.open(magic.MAGIC_NONE)
+    filemagic.load()
+    rcmd = d.getVar("IMAGEQA_HOST_CMD", True)
+    if not rcmd:
+        return None
+    rcmd = rcmd.split()
+
+    def list_dependencies(file):
+        cmd = list(rcmd)
+        cmd.append(file)
+        try:
+            cmd = Popen(cmd, stdout=PIPE)
+        except OSError, e:
+            bb.fatal("Execution failed %s: %s" % (cmd, e))
+
+        libre = d.getVar("IMAGEQA_HOST_RE", True)
+        needed_re = re.compile(libre)
+
+        needed_libs = []
+        for line in cmd.stdout.readlines():
+            needed_match = needed_re.match(line)
+            if needed_match:
+                needed_libs.append(needed_match.group(1).lstrip("/"))
+        return needed_libs
+
+    def compute_replacements(file, deps, files):
+         ret = []
+         for dep in deps:
+             if dep in files:
+                 relpath = os.path.relpath(dep, os.path.dirname(file))
+                 ret.append(('/' + dep, relpath))
+         return ret
+
+    def replace_dependencies(f, replacements):
+        installNT = d.getVar("DO_IMAGE_RPATH_HOST_INSTALLNAMETOOL", True)
+        for a,b in replacements:
+            mod = stat.S_IMODE(os.stat(f).st_mode)
+            os.chmod(f, mod | stat.S_IWGRP | stat.S_IWOTH | stat.S_IWUSR)
+            cmd = [installNT, "-change", a, "@loader_path/" + b, f]
+            try:
+                cmd = Popen(cmd)
+                cmd.wait()
+                os.chmod(f, mod)
+            except OSError, e:
+                os.chmod(f, mod)
+                bb.fatal("Execution failed %s: %s" % (cmd, e))
+
+    def replace_id(f):
+        installNT = d.getVar("DO_IMAGE_RPATH_HOST_INSTALLNAMETOOL", True)
+        a =  os.path.relpath(f, os.path.dirname(f))
+        mod = stat.S_IMODE(os.stat(f).st_mode)
+        os.chmod(f, mod | stat.S_IWGRP | stat.S_IWOTH | stat.S_IWUSR)
+        cmd = [installNT, "-id", "@loader_path/" + a, f]
+        try:
+            cmd = Popen(cmd)
+            cmd.wait()
+            os.chmod(f, mod)
+        except OSError, e:
+            os.chmod(f, mod)
+            bb.fatal("Execution failed %s: %s" % (cmd, e))
+
+
+    def list_files():
+        oebakery.debug("Checking for libraries")
+        search_dirs = d.getVar("IMAGEQA_HOST_READELF_SEARCH_DIRS", True).split()
+        search_dirs.append("usr/lib/pango/1.6.0/modules/")
+        search_dirs.append("usr/lib/gtk-2.0/2.10.0/immodules/")
+        search_dirs.append("usr/lib/gtk-2.0/2.10.0/engines/")
+        search_dirs.append("usr/lib/gdk-pixbuf-2.0/2.10.0/loaders/")
+        elf_re = d.getVar("HOST_ELF", True) or None
+        oebakery.debug("HOST_ELF=%s"%(elf_re))
+        if elf_re:
+            elf_re = re.compile(elf_re)
+
+        files = []
+        for search_dir in set(search_dirs):
+            oebakery.debug("search_dir=%s"%(search_dir))
+            for elffile in glob("%s/*"%(search_dir.lstrip("/"))):
+                if not os.path.isfile(elffile):
+                    continue
+
+                elffile2 = elffile
+                if os.path.islink(elffile):
+                    elffile2 = os.path.normpath(os.path.join(os.path.dirname(elffile), os.readlink(elffile)))
+                filetype = filemagic.file(elffile2)
+                oebakery.debug("file=%s rfile=%s type=%s"%(elffile, elffile2, filetype))
+
+                if not filetype:
+                    continue
+
+                if elf_re and not elf_re.match(filetype):
+                    continue
+                files.append(elffile)
+        return files
+
+    cwd = os.getcwd()
+    os.chdir(d.getVar("RSTAGE_DIR", True))
+    files = list_files()
+    for f in files:
+        if os.path.islink(f):
+            continue
+        print "Change rpath for %s" % (f)
+        deps = list_dependencies(f)
+        replacements = compute_replacements(f, deps, files)
+        replace_dependencies(f, replacements)
+        replace_id(f)
+    os.chdir(cwd)
+}

@@ -1,0 +1,55 @@
+diff -urN '--exclude=.git' a/configure.ac b/configure.ac
+--- a/configure.ac	2014-08-02 17:59:51.576427624 +0200
++++ b/configure.ac	2014-08-02 17:40:01.550395730 +0200
+@@ -68,12 +68,12 @@
+ 		mingw_found=yes
+ 		AC_CHECK_TOOL(WINDRES, windres)
+ 	;;
+-	armv6-apple-darwin|armv7-apple-darwin|i386-apple-darwin|armv7s-apple-darwin)
++	armv6-*-darwin*|armv7-*-darwin*|i386-*-darwin*|armv7s-*-darwin*)
+ 		CFLAGS="$CFLAGS -DTARGET_OS_IPHONE=1 "
+ 		LIBS="$LIBS -framework CoreFoundation -framework AudioToolbox -framework CoreAudio -framework Foundation -framework QuartzCore -framework OpenGLES -framework UIKit -framework AVFoundation"
+ 		ios_found=yes
+ 	;;
+-	x86_64-apple-darwin*|i686-apple-darwin*)
++	x86_64-*-darwin*|i686-*-darwin*)
+ 		MSPLUGINS_CFLAGS=""
+ 		dnl use macport installation
+ 		ACLOCAL_MACOS_FLAGS="-I /opt/local/share/aclocal"
+@@ -337,7 +337,7 @@
+ 
+ case "$target" in
+         #macosx 64 bits
+-        x86_64-apple-darwin*)
++        x86_64-*-darwin*)
+                 LIBS="$LIBS -mmacosx-version-min=10.6"
+                 CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.6"
+                 CFLAGS="$CFLAGS -mmacosx-version-min=10.6"
+diff -urN '--exclude=.git' a/mediastreamer2/configure.ac b/mediastreamer2/configure.ac
+--- a/mediastreamer2/configure.ac	2014-08-02 17:59:53.008389565 +0200
++++ b/mediastreamer2/configure.ac	2014-08-02 17:38:52.000078575 +0200
+@@ -146,10 +146,10 @@
+ 
+ dnl add thread flags
+ case $host in
+-	i386-apple*|armv6-apple*|armv7-apple*|armv7s-apple*)
++	i386-*-darwin*|armv6-*-darwin*|armv7-*-darwin*|armv7s-*-darwin*)
+ 		ios_found=yes
+ 	;;
+-	x86_64-apple*|i686-apple*)
++	x86_64-*-darwin*|i686-*-darwin*)
+ 		macosx_found=yes
+                 LIBS="$LIBS -mmacosx-version-min=10.6"
+                 CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.6"
+diff -urN '--exclude=.git' a/oRTP/configure.ac b/oRTP/configure.ac
+--- a/oRTP/configure.ac	2014-08-02 18:00:03.656107014 +0200
++++ b/oRTP/configure.ac	2014-08-02 17:39:02.983811777 +0200
+@@ -115,7 +115,7 @@
+ 
+ case "$target" in
+         #macosx 64 bits
+-        x86_64-apple-darwin*)
++        x86_64-*-darwin*)
+                 LIBS="$LIBS -mmacosx-version-min=10.6"
+                 CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.6"
+                 CFLAGS="$CFLAGS -mmacosx-version-min=10.6"

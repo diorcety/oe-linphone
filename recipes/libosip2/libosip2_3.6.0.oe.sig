@@ -1,0 +1,1 @@
+6d81be8180a46e045fce676d55913433a5e147c8  libosip2-3.6.0.tar.gz

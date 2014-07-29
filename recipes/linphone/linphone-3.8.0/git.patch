@@ -1,0 +1,11 @@
+diff -urN a/coreapi/Makefile.am b/coreapi/Makefile.am
+--- a/coreapi/Makefile.am	2014-02-14 08:45:35.877164117 +0100
++++ b/coreapi/Makefile.am	2014-02-14 08:48:37.455890639 +0100
+@@ -163,7 +163,6 @@
+ 	if test "$(GITDESCRIBE)" != "" ; then \
+ 		if test "$(GIT_TAG)" != "$(PACKAGE_VERSION)" ; then \
+ 			echo "*** PACKAGE_VERSION and git tag differ. Please put them identical."; \
+-			exit 1; \
+ 		fi ; \
+ 		$(ECHO) -n "#define LIBLINPHONE_GIT_VERSION \"$(GITDESCRIBE)\"" > $(GITVERSION_FILE_TMP) ; \
+ 	elif test "$(GITREVISION)" != "" ; then \

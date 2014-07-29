@@ -1,0 +1,81 @@
+diff -urN a/coreapi/misc.c b/coreapi/misc.c
+--- a/coreapi/misc.c	2014-05-13 21:09:57.967113907 +0200
++++ b/coreapi/misc.c	2014-05-13 21:24:40.330562672 +0200
+@@ -252,7 +252,7 @@
+ 	ortp_socket_t sock;
+ 	int optval;
+ 	sock=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP);
+-	if (sock<0) {
++	if (!valid_socket(sock)) {
+ 		ms_error("Fail to create socket");
+ 		return -1;
+ 	}
+diff -urN a/mediastreamer2/src/ortp-deps/ortp/port.h b/mediastreamer2/src/ortp-deps/ortp/port.h
+--- a/mediastreamer2/src/ortp-deps/ortp/port.h	2014-05-13 21:02:54.444728739 +0200
++++ b/mediastreamer2/src/ortp-deps/ortp/port.h	2014-05-13 21:22:11.448904970 +0200
+@@ -270,6 +270,7 @@
+ #define ortp_new(type,count)	(type*)ortp_malloc(sizeof(type)*(count))
+ #define ortp_new0(type,count)	(type*)ortp_malloc0(sizeof(type)*(count))
+ 
++ORTP_PUBLIC int valid_socket(ortp_socket_t sock);
+ ORTP_PUBLIC int close_socket(ortp_socket_t sock);
+ ORTP_PUBLIC int set_non_blocking_socket(ortp_socket_t sock);
+ 
+diff -urN a/mediastreamer2/src/ortp-deps/port.c b/mediastreamer2/src/ortp-deps/port.c
+--- a/mediastreamer2/src/ortp-deps/port.c	2014-05-13 21:02:54.444728739 +0200
++++ b/mediastreamer2/src/ortp-deps/port.c	2014-05-13 21:23:55.286154420 +0200
+@@ -115,6 +115,14 @@
+ #endif
+ }
+ 
++int valid_socket(ortp_socket_t sock){
++#if !defined(_WIN32) && !defined(_WIN32_WCE)
++	return sock >= 0;
++#else
++	return sock != INVALID_SOCKET;
++#endif
++}
++
+ 
+ /*
+  * this method is an utility method that calls close() on UNIX or
+diff -urN a/mediastreamer2/tools/bench.c b/mediastreamer2/tools/bench.c
+--- a/mediastreamer2/tools/bench.c	2014-05-13 21:02:54.484727339 +0200
++++ b/mediastreamer2/tools/bench.c	2014-05-13 21:10:36.734466801 +0200
+@@ -78,7 +78,7 @@
+ 	{	NUM_SESSION,NUM_SESSION_RECORD,
+ 		11000,"127.0.0.1",10000,8,8000,20,"test1.wav",NULL,NULL	},
+ 	
+-	{	0,0,0,'\0',0,0,0,0,NULL,NULL,NULL	},
++	{	0,0,0,"\0",0,0,0,0,NULL,NULL,NULL	},
+ };
+ 
+ RtpSession *create_duplex_rtpsession(int locport){
+diff -urN a/oRTP/include/ortp/port.h b/oRTP/include/ortp/port.h
+--- a/oRTP/include/ortp/port.h	2014-05-13 21:03:30.079534355 +0200
++++ b/oRTP/include/ortp/port.h	2014-05-13 21:21:59.828735456 +0200
+@@ -280,6 +280,7 @@
+ #define ortp_new(type,count)	(type*)ortp_malloc(sizeof(type)*(count))
+ #define ortp_new0(type,count)	(type*)ortp_malloc0(sizeof(type)*(count))
+ 
++ORTP_PUBLIC int valid_socket(ortp_socket_t sock);
+ ORTP_PUBLIC int close_socket(ortp_socket_t sock);
+ ORTP_PUBLIC int set_non_blocking_socket(ortp_socket_t sock);
+ 
+diff -urN a/oRTP/src/port.c b/oRTP/src/port.c
+--- a/oRTP/src/port.c	2014-05-13 21:03:30.079534355 +0200
++++ b/oRTP/src/port.c	2014-05-13 21:23:33.889933670 +0200
+@@ -115,6 +115,13 @@
+ #endif
+ }
+ 
++int valid_socket(ortp_socket_t sock){
++#if !defined(_WIN32) && !defined(_WIN32_WCE)
++	return sock >= 0;
++#else
++	return sock != INVALID_SOCKET;
++#endif
++}
+ 
+ /*
+  * this method is an utility method that calls close() on UNIX or

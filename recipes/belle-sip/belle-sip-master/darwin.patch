@@ -1,0 +1,17 @@
+diff --git a/configure.ac b/configure.ac
+index 87a38e5..047b881 100755
+--- a/configure.ac
++++ b/configure.ac
+@@ -30,12 +30,6 @@ dnl AC_PROG_CC_C99
+ LT_INIT(win32-dll)
+ 
+ case "$target" in
+-	#macosx 64 bits
+-        x86_64-apple-darwin*)
+-                LIBS="$LIBS -mmacosx-version-min=10.6"
+-                CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.6"
+-                CFLAGS="$CFLAGS -mmacosx-version-min=10.6"
+-        ;;
+         i386-apple*|armv6-apple*|armv7-apple*|armv7s-apple*)
+ 			LIBS="$LIBS -framework CoreFoundation -framework CFNetwork "
+ 		;;

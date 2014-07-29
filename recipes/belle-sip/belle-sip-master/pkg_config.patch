@@ -1,0 +1,11 @@
+diff --git a/belle-sip.pc.in b/belle-sip.pc.in
+index b9ee3dd..524390c 100644
+--- a/belle-sip.pc.in
++++ b/belle-sip.pc.in
+@@ -8,5 +8,5 @@ Description: A c based implementation of the SIP (RFC 3261)  telephony protocol
+ Requires.private: @REQUIRES_PRIVATE@ @TLS_PC@
+ Version: @VERSION@
+ Libs: -L@libdir@ -lbellesip
+-Libs.private: @LIBS_PRIVATE@
++Libs.private: -lantlr3c -lpolarssl
+ Cflags: -I@includedir@ 

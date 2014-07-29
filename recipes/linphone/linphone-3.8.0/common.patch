@@ -1,0 +1,79 @@
+diff -urN a/coreapi/Makefile.am b/coreapi/Makefile.am
+--- a/coreapi/Makefile.am	2014-04-01 20:07:08.640841848 +0200
++++ b/coreapi/Makefile.am	2014-04-01 20:04:09.843381618 +0200
+@@ -105,6 +105,21 @@
+ endif
+ endif
+ 
++if HAVE_LD_OUTPUT_DEF
++liblinphone_la_LDFLAGS += -Wl,--output-def,liblinphone-$(LIBLINPHONE_SO_CURRENT).def
++defexecdir = $(libdir)
++defexec_DATA = liblinphone-$(LIBLINPHONE_SO_CURRENT).def
++CLEANFILES = $(defexec_DATA)
++
++liblinphone-$(LIBLINPHONE_SO_CURRENT).def: liblinphone.la
++
++if BUILD_WIN32
++defexec_DATA += liblinphone-$(LIBLINPHONE_SO_CURRENT).lib
++liblinphone-$(LIBLINPHONE_SO_CURRENT).lib: liblinphone-$(LIBLINPHONE_SO_CURRENT).def liblinphone.la 
++	$(DLLTOOL) --dllname liblinphone-$(LIBLINPHONE_SO_CURRENT).dll --input-def liblinphone-$(LIBLINPHONE_SO_CURRENT).def --output-lib $@ liblinphone.la
++endif
++endif
++
+ liblinphone_la_LIBADD= \
+ 		$(SIPSTACK_LIBS) \
+ 		$(MEDIASTREAMER_LIBS) \
+diff -urN a/gtk+-2.22.1.filelist b/gtk+-2.22.1.filelist
+--- a/gtk+-2.22.1.filelist	2014-04-01 20:07:08.656841279 +0200
++++ b/gtk+-2.22.1.filelist	2014-04-01 20:04:09.843381618 +0200
+@@ -1,15 +1,17 @@
+ bin
+-bin/freetype6.dll
+-bin/intl.dll
++bin/libxml2-2.dll
++bin/libfreetype-6.dll
++bin/libintl-8.dll
+ bin/libasprintf-0.dll
+ bin/libatk-1.0-0.dll
++bin/libffi-5.dll
+ bin/libcairo-2.dll
+ bin/libcairo-gobject-2.dll
+ bin/libcairo-script-interpreter-2.dll
+ bin/libexpat-1.dll
++bin/libpixman-1-0.dll
+ bin/libfontconfig-1.dll
+ bin/libgailutil-18.dll
+-bin/libgcc_s_dw2-1.dll
+ bin/libgdk-win32-2.0-0.dll
+ bin/libgdk_pixbuf-2.0-0.dll
+ bin/libgio-2.0-0.dll
+@@ -22,8 +24,9 @@
+ bin/libpangocairo-1.0-0.dll
+ bin/libpangoft2-1.0-0.dll
+ bin/libpangowin32-1.0-0.dll
+-bin/libpng14-14.dll
++bin/libpng15-15.dll
+ bin/zlib1.dll
++bin/libiconv-2.dll
+ lib/gtk-2.0
+ lib/gtk-2.0/2.10.0
+ lib/gtk-2.0/2.10.0/engines
+diff -urN a/mediastreamer2/src/Makefile.am b/mediastreamer2/src/Makefile.am
+--- a/mediastreamer2/src/Makefile.am	2014-04-01 20:07:53.127271664 +0200
++++ b/mediastreamer2/src/Makefile.am	2014-04-01 20:04:17.711085858 +0200
+@@ -376,6 +376,15 @@
+                                         -luuid
+ endif
+ 
++if BUILD_WIN32
++libmediastreamer_voip_la_LIBADD+=       -lole32 \
++                                        -loleaut32\
++                                        -lwinmm \
++                                        -luuid
++
++
++endif
++
+ if BUILD_VP8
+ AM_CFLAGS+=$(VP8_CFLAGS)
+ libmediastreamer_voip_la_LIBADD+=$(VP8_LIBS)

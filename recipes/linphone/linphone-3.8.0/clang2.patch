@@ -1,0 +1,36 @@
+diff -urN a/configure.ac b/configure.ac
+--- a/configure.ac	2014-05-13 21:01:55.716655816 +0200
++++ b/configure.ac	2014-05-13 21:47:47.997658862 +0200
+@@ -63,8 +63,8 @@
+ 		CFLAGS="$CFLAGS -DORTP_STATIC -D_WIN32_WINNT=0x0501 "
+ 		CXXFLAGS="$CXXFLAGS -DORTP_STATIC -D_WIN32_WINNT=0x0501"
+ 		LIBS="$LIBS -lws2_32"
+-		GUI_FLAGS="-mwindows"
+-		CONSOLE_FLAGS="-mconsole"
++		GUI_FLAGS="-Wl,-subsystem,windows"
++		CONSOLE_FLAGS="-Wl,-subsystem,console"
+ 		mingw_found=yes
+ 		AC_CHECK_TOOL(WINDRES, windres)
+ 	;;
+diff -urN a/gtk/Makefile.am b/gtk/Makefile.am
+--- a/gtk/Makefile.am	2014-05-13 21:01:55.728653816 +0200
++++ b/gtk/Makefile.am	2014-05-13 21:47:16.834458945 +0200
+@@ -70,7 +70,7 @@
+ 	$(WINDRES) $(srcdir)/$(LINPHONE_ICO_RC_FILE) -O coff -o linphone.res
+ 
+ linphone_LDADD+=linphone.res -lwininet
+-linphone_LDFLAGS=-Wl,--export-all-symbols -mwindows
++linphone_LDFLAGS=-Wl,--export-all-symbols
+ else
+ linphone_LDFLAGS=-export-dynamic
+ endif
+@@ -86,7 +86,8 @@
+ 		$(ORTP_CFLAGS) $(BELLESIP_CFLAGS) \
+ 		$(STRICT_OPTIONS) $(LIBGTK_CFLAGS) $(LIBGTKMAC_CFLAGS) $(IPV6_CFLAGS) \
+ 		$(TUNNEL_CFLAGS) \
+-		$(SQLITE3_CFLAGS)
++		$(SQLITE3_CFLAGS) \
++		$(GUI_FLAGS)
+ 
+ 
+ version_date.h: $(top_srcdir)/configure.ac

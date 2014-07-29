@@ -1,0 +1,28 @@
+diff -urN a/library/Makefile b/library/Makefile
+--- a/library/Makefile	2013-10-16 08:04:21.599668333 +0200
++++ b/library/Makefile	2013-10-16 08:06:34.546371239 +0200
+@@ -57,9 +57,10 @@
+ 
+ .SILENT:
+ 
+-ifndef SHARED
++ifdef STATIC
+ all: static
+-else
++endif
++ifdef SHARED
+ all: shared
+ endif
+ 
+diff -urN a/Makefile b/Makefile
+--- a/Makefile	2013-10-16 08:04:21.599668333 +0200
++++ b/Makefile	2013-10-16 08:13:31.660052258 +0200
+@@ -25,7 +25,7 @@
+ 	
+ 	mkdir -p $(DESTDIR)/bin
+ ifdef WINDOWS
+-	cp library/libpolarssl*.dll $(DESTDIR)/bin
++	cp library/libpolarssl*.dll $(DESTDIR)/bin || exit 0
+ endif
+ 	for p in programs/*/* ; do              \
+ 	    if [ -x $$p ] && [ ! -d $$p ] ;     \
