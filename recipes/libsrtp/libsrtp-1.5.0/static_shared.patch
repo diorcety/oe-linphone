@@ -1,8 +1,8 @@
 diff --git a/Makefile.in b/Makefile.in
-index 4aae601..be5f2da 100644
+index a7ca1d5..91e995d 100644
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -56,6 +56,8 @@ INSTALL	= @INSTALL@
+@@ -58,6 +58,8 @@ INSTALL	= @INSTALL@
  EXE	= @EXE@
  SHLIBVERSION	= @SHLIBVERSION@
  SHLIB = @SHLIB@
@@ -11,9 +11,9 @@ index 4aae601..be5f2da 100644
  
  # gdoi is the group domain of interpretation for isakmp, a group key
  # management system which can provide keys for srtp
-@@ -78,6 +80,14 @@ libdir = @libdir@
- shlibdir = @shlibdir@
- host_os = @host_os@
+@@ -93,6 +95,14 @@ endif
+ %$(EXE): %.c
+ 	$(COMPILE) $(LDFLAGS) $< -o $@ $(SRTPLIB) $(LIBS)
  
 +ifeq ($(enable_shared),yes)
 +target_shared = libsrtp$(SHLIBVERSION)
@@ -24,9 +24,9 @@ index 4aae601..be5f2da 100644
 +targets = $(target_shared) $(target_static)
 +
  
- # implicit rules for object files and test apps
- 
-@@ -159,7 +169,7 @@ testapp = $(crypto_testapp) test/srtp_driver$(EXE) test/replay_driver$(EXE) \
+ # libcrypt.a (the crypto engine) 
+ ciphers = crypto/cipher/cipher.o crypto/cipher/null_cipher.o      \
+@@ -165,7 +175,7 @@ testapp = $(crypto_testapp) test/srtp_driver$(EXE) test/replay_driver$(EXE) \
  	  test/roc_driver$(EXE) test/rdbx_driver$(EXE) test/rtpw$(EXE) \
  	  test/dtls_srtp_driver$(EXE)
  
@@ -138,10 +138,10 @@ index d5415fc..93ac606 100644
 +/* Define to `unsigned int' if <sys/types.h> does not define. */
  #undef size_t
 diff --git a/configure b/configure
-index 44da6cf..6f8be26 100755
+index f79a7be..5af897f 100755
 --- a/configure
 +++ b/configure
-@@ -196,6 +196,14 @@ test -x / || exit 1"
+@@ -198,6 +198,14 @@ test -x / || exit 1"
    as_lineno_2=";as_suggested=$as_suggested$LINENO;as_suggested=$as_suggested" as_lineno_2a=\$LINENO
    eval 'test \"x\$as_lineno_1'\$as_run'\" != \"x\$as_lineno_2'\$as_run'\" &&
    test \"x\`expr \$as_lineno_1'\$as_run' + 1\`\" = \"x\$as_lineno_2'\$as_run'\"' || exit 1
@@ -156,7 +156,7 @@ index 44da6cf..6f8be26 100755
  test \$(( 1 + 1 )) = 2 || exit 1"
    if (eval "$as_required") 2>/dev/null; then :
    as_have_required=yes
-@@ -553,6 +561,8 @@ as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
+@@ -556,6 +564,8 @@ as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
  # Sed expression to map a string onto a valid variable name.
  as_tr_sh="eval sed 'y%*+%pp%;s%[^_$as_cr_alnum]%_%g'"
  
@@ -165,7 +165,7 @@ index 44da6cf..6f8be26 100755
  
  test -n "$DJDIR" || exec 7<&0 </dev/null
  exec 6>&1
-@@ -627,21 +637,38 @@ RNG_EXTRA_OBJS
+@@ -631,21 +641,38 @@ RNG_EXTRA_OBJS
  RNG_OBJS
  AES_ICM_OBJS
  USE_OPENSSL
@@ -215,7 +215,7 @@ index 44da6cf..6f8be26 100755
  OBJEXT
  EXEEXT
  ac_ct_CC
-@@ -649,7 +676,15 @@ CPPFLAGS
+@@ -653,7 +680,15 @@ CPPFLAGS
  LDFLAGS
  CFLAGS
  CC
@@ -232,7 +232,7 @@ index 44da6cf..6f8be26 100755
  target_alias
  host_alias
  build_alias
-@@ -691,6 +726,13 @@ SHELL'
+@@ -695,6 +730,13 @@ SHELL'
  ac_subst_files=''
  ac_user_opts='
  enable_option_checking
@@ -246,7 +246,7 @@ index 44da6cf..6f8be26 100755
  enable_kernel_linux
  enable_debug
  enable_generic_aesicm
-@@ -1320,6 +1362,11 @@ Optional Features:
+@@ -1326,6 +1368,11 @@ Optional Features:
    --disable-option-checking  ignore unrecognized --enable/--with options
    --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
    --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
@@ -258,7 +258,7 @@ index 44da6cf..6f8be26 100755
    --enable-kernel-linux   build library to run in Linux kernel context
    --disable-debug         do not compile in dynamic debugging system
    --enable-generic-aesicm compile in changes for ISMAcryp
-@@ -1329,6 +1376,15 @@ Optional Features:
+@@ -1335,6 +1382,15 @@ Optional Features:
    --enable-console        use /dev/console for error reporting
    --enable-gdoi           enable GDOI key management
  
@@ -274,7 +274,7 @@ index 44da6cf..6f8be26 100755
  Some influential environment variables:
    CC          C compiler command
    CFLAGS      C compiler flags
-@@ -1457,13 +1513,13 @@ fi
+@@ -1463,13 +1519,13 @@ fi
  
  } # ac_fn_c_try_compile
  
@@ -293,7 +293,7 @@ index 44da6cf..6f8be26 100755
    if { { ac_try="$ac_link"
  case "(($ac_try" in
    *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-@@ -1471,33 +1527,68 @@ case "(($ac_try" in
+@@ -1477,33 +1533,68 @@ case "(($ac_try" in
  esac
  eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
  $as_echo "$ac_try_echo"; } >&5
@@ -378,7 +378,7 @@ index 44da6cf..6f8be26 100755
  
  # ac_fn_c_try_cpp LINENO
  # ----------------------
-@@ -1536,11 +1627,52 @@ fi
+@@ -1542,11 +1633,52 @@ fi
  
  } # ac_fn_c_try_cpp
  
@@ -436,7 +436,7 @@ index 44da6cf..6f8be26 100755
  {
    as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
-@@ -1550,22 +1682,59 @@ if eval \${$3+:} false; then :
+@@ -1556,22 +1688,59 @@ if eval \${$3+:} false; then :
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
  /* end confdefs.h.  */
@@ -501,7 +501,7 @@ index 44da6cf..6f8be26 100755
  
  # ac_fn_c_check_header_mongrel LINENO HEADER VAR INCLUDES
  # -------------------------------------------------------
-@@ -1890,127 +2059,14 @@ rm -f conftest.val
+@@ -1900,127 +2069,14 @@ rm -f conftest.val
    as_fn_set_status $ac_retval
  
  } # ac_fn_c_compute_int
@@ -552,7 +552,7 @@ index 44da6cf..6f8be26 100755
 -  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
 -  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 -  as_fn_set_status $ac_retval
-+It was created by $as_me, which was
++It was created by libsrtp $as_me 1.5.0, which was
 +generated by GNU Autoconf 2.69.  Invocation command line was
  
 -} # ac_fn_c_try_link
@@ -627,7 +627,7 @@ index 44da6cf..6f8be26 100755
 -This file contains any messages produced by compilers while
 -running configure, to aid debugging if configure makes a mistake.
 -
--It was created by $as_me, which was
+-It was created by libsrtp $as_me 1.5.0, which was
 -generated by GNU Autoconf 2.69.  Invocation command line was
 -
 -  $ $0 $@
@@ -635,7 +635,7 @@ index 44da6cf..6f8be26 100755
  
  _ACEOF
  exec 5>>config.log
-@@ -2355,21 +2411,215 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
+@@ -2365,21 +2421,215 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
  ac_compiler_gnu=$ac_cv_c_compiler_gnu
  
  
@@ -858,7 +858,7 @@ index 44da6cf..6f8be26 100755
  else
  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
  for as_dir in $PATH
-@@ -2378,7 +2628,7 @@ do
+@@ -2388,7 +2638,7 @@ do
    test -z "$as_dir" && as_dir=.
      for ac_exec_ext in '' $ac_executable_extensions; do
    if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
@@ -867,7 +867,7 @@ index 44da6cf..6f8be26 100755
      $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
      break 2
    fi
-@@ -2388,10 +2638,10 @@ IFS=$as_save_IFS
+@@ -2398,10 +2648,10 @@ IFS=$as_save_IFS
  
  fi
  fi
@@ -882,7 +882,7 @@ index 44da6cf..6f8be26 100755
  else
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
  $as_echo "no" >&6; }
-@@ -2399,110 +2649,13 @@ fi
+@@ -2409,110 +2659,13 @@ fi
  
  
  fi
@@ -998,7 +998,7 @@ index 44da6cf..6f8be26 100755
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ac_ct_CC"; then
-@@ -3241,278 +3394,98 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+@@ -3251,278 +3404,98 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
  ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
  ac_compiler_gnu=$ac_cv_c_compiler_gnu
  
@@ -1348,7 +1348,7 @@ index 44da6cf..6f8be26 100755
  do
    IFS=$as_save_IFS
    test -z "$as_dir" && as_dir=.
-@@ -3633,122 +3606,3229 @@ $as_echo "$ac_cv_path_EGREP" >&6; }
+@@ -3643,122 +3616,3215 @@ $as_echo "$ac_cv_path_EGREP" >&6; }
   EGREP="$ac_cv_path_EGREP"
  
  
@@ -1956,8 +1956,7 @@ index 44da6cf..6f8be26 100755
 +    ;;
 +  *)
 +    lt_cv_sys_max_cmd_len=`(getconf ARG_MAX) 2> /dev/null`
-+    if test -n "$lt_cv_sys_max_cmd_len" && \
-+	test undefined != "$lt_cv_sys_max_cmd_len"; then
++    if test -n "$lt_cv_sys_max_cmd_len"; then
 +      lt_cv_sys_max_cmd_len=`expr $lt_cv_sys_max_cmd_len \/ 4`
 +      lt_cv_sys_max_cmd_len=`expr $lt_cv_sys_max_cmd_len \* 3`
 +    else
@@ -3520,7 +3519,7 @@ index 44da6cf..6f8be26 100755
 +  rm -rf conftest*
 +  ;;
 +
-+x86_64-*kfreebsd*-gnu|x86_64-*linux*|powerpc*-*linux*| \
++x86_64-*kfreebsd*-gnu|x86_64-*linux*|ppc*-*linux*|powerpc*-*linux*| \
 +s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
 +  # Find out which ABI we are using.
 +  echo 'int i;' > conftest.$ac_ext
@@ -3536,19 +3535,9 @@ index 44da6cf..6f8be26 100755
 +	    LD="${LD-ld} -m elf_i386_fbsd"
 +	    ;;
 +	  x86_64-*linux*)
-+	    case `/usr/bin/file conftest.o` in
-+	      *x86-64*)
-+		LD="${LD-ld} -m elf32_x86_64"
-+		;;
-+	      *)
-+		LD="${LD-ld} -m elf_i386"
-+		;;
-+	    esac
++	    LD="${LD-ld} -m elf_i386"
 +	    ;;
-+	  powerpc64le-*)
-+	    LD="${LD-ld} -m elf32lppclinux"
-+	    ;;
-+	  powerpc64-*)
++	  ppc64-*linux*|powerpc64-*linux*)
 +	    LD="${LD-ld} -m elf32ppclinux"
 +	    ;;
 +	  s390x-*linux*)
@@ -3567,10 +3556,7 @@ index 44da6cf..6f8be26 100755
 +	  x86_64-*linux*)
 +	    LD="${LD-ld} -m elf_x86_64"
 +	    ;;
-+	  powerpcle-*)
-+	    LD="${LD-ld} -m elf64lppc"
-+	    ;;
-+	  powerpc-*)
++	  ppc*-*linux*|powerpc*-*linux*)
 +	    LD="${LD-ld} -m elf64ppc"
 +	    ;;
 +	  s390*-*linux*|s390*-*tpf*)
@@ -4674,7 +4660,7 @@ index 44da6cf..6f8be26 100755
    as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
  ac_fn_c_check_header_compile "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default
  "
-@@ -3762,6 +6842,4758 @@ fi
+@@ -3772,6 +6838,4758 @@ fi
  done
  
  
@@ -9433,7 +9419,7 @@ index 44da6cf..6f8be26 100755
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether byte ordering is bigendian" >&5
  $as_echo_n "checking whether byte ordering is bigendian... " >&6; }
  if ${ac_cv_c_bigendian+:} false; then :
-@@ -3987,76 +11819,6 @@ $as_echo "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
+@@ -3997,76 +11815,6 @@ $as_echo "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
   esac
  
  
@@ -9510,7 +9496,7 @@ index 44da6cf..6f8be26 100755
  
  
  case $host_cpu in
-@@ -4080,26 +11842,33 @@ $as_echo "#define CPU_RISC 1" >>confdefs.h
+@@ -4090,26 +11838,33 @@ $as_echo "#define CPU_RISC 1" >>confdefs.h
  	;;
  esac
  
@@ -9552,7 +9538,7 @@ index 44da6cf..6f8be26 100755
  
  
  # Check whether --enable-kernel-linux was given.
-@@ -4765,7 +12534,7 @@ fi
+@@ -4775,7 +12530,7 @@ fi
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for socket in -lwsock32" >&5
  $as_echo_n "checking for socket in -lwsock32... " >&6; }
    SAVELIBS="$LIBS"
@@ -9561,7 +9547,7 @@ index 44da6cf..6f8be26 100755
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
  /* end confdefs.h.  */
  
-@@ -5646,6 +13415,7 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
+@@ -5699,6 +13454,7 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
  # Files that config.status was made for.
  config_files="$ac_config_files"
  config_headers="$ac_config_headers"
@@ -9569,17 +9555,17 @@ index 44da6cf..6f8be26 100755
  
  _ACEOF
  
-@@ -5675,6 +13445,9 @@ $config_files
+@@ -5728,6 +13484,9 @@ $config_files
  Configuration headers:
  $config_headers
  
 +Configuration commands:
 +$config_commands
 +
- Report bugs to the package provider."
+ Report bugs to <https://github.com/cisco/libsrtp/issues>."
  
  _ACEOF
-@@ -5692,6 +13465,7 @@ gives unlimited permission to copy, distribute and modify it."
+@@ -5745,6 +13504,7 @@ gives unlimited permission to copy, distribute and modify it."
  ac_pwd='$ac_pwd'
  srcdir='$srcdir'
  INSTALL='$INSTALL'
@@ -9587,7 +9573,7 @@ index 44da6cf..6f8be26 100755
  test -n "\$AWK" || AWK=awk
  _ACEOF
  
-@@ -5795,6 +13569,287 @@ _ASBOX
+@@ -5848,6 +13608,287 @@ _ASBOX
  
  _ACEOF
  cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
@@ -9875,15 +9861,15 @@ index 44da6cf..6f8be26 100755
  _ACEOF
  
  cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
-@@ -5803,6 +13858,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
+@@ -5856,6 +13897,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
  for ac_config_target in $ac_config_targets
  do
    case $ac_config_target in
 +    "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
      "crypto/include/config.h") CONFIG_HEADERS="$CONFIG_HEADERS crypto/include/config.h:config_in.h" ;;
+     "libsrtp.pc") CONFIG_FILES="$CONFIG_FILES libsrtp.pc" ;;
      "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-     "crypto/Makefile") CONFIG_FILES="$CONFIG_FILES crypto/Makefile" ;;
-@@ -5820,6 +13876,7 @@ done
+@@ -5874,6 +13916,7 @@ done
  if $ac_need_defaults; then
    test "${CONFIG_FILES+set}" = set || CONFIG_FILES=$config_files
    test "${CONFIG_HEADERS+set}" = set || CONFIG_HEADERS=$config_headers
@@ -9891,7 +9877,7 @@ index 44da6cf..6f8be26 100755
  fi
  
  # Have a temporary directory for convenience.  Make it in the build tree
-@@ -6116,7 +14173,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
+@@ -6170,7 +14213,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
  fi # test -n "$CONFIG_HEADERS"
  
  
@@ -9900,7 +9886,7 @@ index 44da6cf..6f8be26 100755
  shift
  for ac_tag
  do
-@@ -6354,9 +14411,645 @@ $as_echo "$as_me: $ac_file is unchanged" >&6;}
+@@ -6408,9 +14451,645 @@ $as_echo "$as_me: $ac_file is unchanged" >&6;}
    fi
   ;;
  
@@ -10547,12 +10533,12 @@ index 44da6cf..6f8be26 100755
  
  
 diff --git a/configure.in b/configure.in
-index 5a77e5b..b710e07 100644
+index ae224d7..de7b168 100644
 --- a/configure.in
 +++ b/configure.in
 @@ -1,5 +1,6 @@
  dnl Process this file with autoconf to produce a configure script.
- AC_INIT(srtp)
+ AC_INIT([libsrtp], [1.5.0], [https://github.com/cisco/libsrtp/issues])
 +LT_INIT
  
  dnl Must come before AC_PROG_CC

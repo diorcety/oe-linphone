@@ -1,8 +1,8 @@
 diff --git a/crypto/hash/hmac.c b/crypto/hash/hmac.c
-index 4f389fe..5ab81e5 100644
+index ddb75ea..6ee3f7c 100644
 --- a/crypto/hash/hmac.c
 +++ b/crypto/hash/hmac.c
-@@ -137,10 +137,10 @@ hmac_init(hmac_ctx_t *state, const uint8_t *key, int key_len) {
+@@ -141,10 +141,10 @@ hmac_init(hmac_ctx_t *state, const uint8_t *key, int key_len) {
    debug_print(mod_hmac, "ipad: %s", octet_string_hex_string(ipad, 64));
    
    /* initialize sha1 context */
@@ -15,7 +15,7 @@ index 4f389fe..5ab81e5 100644
    memcpy(&state->ctx, &state->init_ctx, sizeof(sha1_ctx_t)); 
  
    return err_status_ok;
-@@ -161,7 +161,7 @@ hmac_update(hmac_ctx_t *state, const uint8_t *message, int msg_octets) {
+@@ -165,7 +165,7 @@ hmac_update(hmac_ctx_t *state, const uint8_t *message, int msg_octets) {
  	      octet_string_hex_string(message, msg_octets));
    
    /* hash message into sha1 context */
@@ -24,7 +24,7 @@ index 4f389fe..5ab81e5 100644
  
    return err_status_ok;
  }
-@@ -179,7 +179,7 @@ hmac_compute(hmac_ctx_t *state, const void *message,
+@@ -183,7 +183,7 @@ hmac_compute(hmac_ctx_t *state, const void *message,
    
    /* hash message, copy output into H */
    hmac_update(state, (const uint8_t*)message, msg_octets);
@@ -33,7 +33,7 @@ index 4f389fe..5ab81e5 100644
  
    /*
     * note that we don't need to debug_print() the input, since the
-@@ -189,16 +189,16 @@ hmac_compute(hmac_ctx_t *state, const void *message,
+@@ -193,16 +193,16 @@ hmac_compute(hmac_ctx_t *state, const void *message,
  	      octet_string_hex_string((uint8_t *)H, 20));
  
    /* re-initialize hash context */
@@ -55,10 +55,10 @@ index 4f389fe..5ab81e5 100644
    /* copy hash_value to *result */
    for (i=0; i < tag_len; i++)    
 diff --git a/crypto/hash/sha1.c b/crypto/hash/sha1.c
-index b9a8d10..b1c9c8a 100644
+index c200437..a6ea821 100644
 --- a/crypto/hash/sha1.c
 +++ b/crypto/hash/sha1.c
-@@ -74,12 +74,12 @@ uint32_t SHA_K2 = 0x8F1BBCDC;   /* Kt for 40 <= t <= 59 */
+@@ -77,12 +77,12 @@ uint32_t SHA_K2 = 0x8F1BBCDC;   /* Kt for 40 <= t <= 59 */
  uint32_t SHA_K3 = 0xCA62C1D6;   /* Kt for 60 <= t <= 79 */
  
  void
@@ -75,7 +75,7 @@ index b9a8d10..b1c9c8a 100644
  
  }
  
-@@ -96,7 +96,7 @@ sha1(const uint8_t *msg,  int octets_in_msg, uint32_t hash_value[5]) {
+@@ -99,7 +99,7 @@ sha1(const uint8_t *msg,  int octets_in_msg, uint32_t hash_value[5]) {
   */
  
  void
@@ -84,7 +84,7 @@ index b9a8d10..b1c9c8a 100644
    uint32_t H0;
    uint32_t H1;
    uint32_t H2;
-@@ -183,7 +183,7 @@ sha1_core(const uint32_t M[16], uint32_t hash_value[5]) {
+@@ -186,7 +186,7 @@ sha1_core(const uint32_t M[16], uint32_t hash_value[5]) {
  }
  
  void
@@ -93,7 +93,7 @@ index b9a8d10..b1c9c8a 100644
  
    /* initialize state vector */
    ctx->H[0] = 0x67452301;
-@@ -201,7 +201,7 @@ sha1_init(sha1_ctx_t *ctx) {
+@@ -204,7 +204,7 @@ sha1_init(sha1_ctx_t *ctx) {
  }
  
  void
@@ -102,7 +102,7 @@ index b9a8d10..b1c9c8a 100644
    int i;
    uint8_t *buf = (uint8_t *)ctx->M;
  
-@@ -226,7 +226,7 @@ sha1_update(sha1_ctx_t *ctx, const uint8_t *msg, int octets_in_msg) {
+@@ -229,7 +229,7 @@ sha1_update(sha1_ctx_t *ctx, const uint8_t *msg, int octets_in_msg) {
  
        debug_print(mod_sha1, "(update) running sha1_core()", NULL);
  
@@ -111,7 +111,7 @@ index b9a8d10..b1c9c8a 100644
  
      } else {
  
-@@ -249,7 +249,7 @@ sha1_update(sha1_ctx_t *ctx, const uint8_t *msg, int octets_in_msg) {
+@@ -252,7 +252,7 @@ sha1_update(sha1_ctx_t *ctx, const uint8_t *msg, int octets_in_msg) {
   */
  
  void
@@ -121,10 +121,10 @@ index b9a8d10..b1c9c8a 100644
    uint32_t W[80];  
    int i, t;
 diff --git a/crypto/include/sha1.h b/crypto/include/sha1.h
-index 8b02f76..9a90058 100644
+index fd54469..d2efdb2 100644
 --- a/crypto/include/sha1.h
 +++ b/crypto/include/sha1.h
-@@ -102,7 +102,7 @@ typedef struct {
+@@ -103,7 +103,7 @@ typedef struct {
   */
  
  void
@@ -133,7 +133,7 @@ index 8b02f76..9a90058 100644
  
  /*
   * sha1_init(&ctx) initializes the SHA1 context ctx
-@@ -116,13 +116,13 @@ sha1(const uint8_t *message,  int octets_in_msg, uint32_t output[5]);
+@@ -117,13 +117,13 @@ sha1(const uint8_t *message,  int octets_in_msg, uint32_t output[5]);
   */
  
  void
@@ -150,7 +150,7 @@ index 8b02f76..9a90058 100644
  
  /*
   * The sha1_core function is INTERNAL to SHA-1, but it is declared
-@@ -140,7 +140,7 @@ sha1_final(sha1_ctx_t *ctx, uint32_t output[5]);
+@@ -141,7 +141,7 @@ sha1_final(sha1_ctx_t *ctx, uint32_t output[5]);
   */
  
  void
@@ -160,10 +160,10 @@ index 8b02f76..9a90058 100644
  #endif /* else OPENSSL */
       
 diff --git a/crypto/test/sha1_driver.c b/crypto/test/sha1_driver.c
-index 6036022..f29d76e 100644
+index 6adfad1..ae0995d 100644
 --- a/crypto/test/sha1_driver.c
 +++ b/crypto/test/sha1_driver.c
-@@ -107,9 +107,9 @@ sha1_test_case_validate(const hash_test_case_t *test_case) {
+@@ -113,9 +113,9 @@ sha1_test_case_validate(const hash_test_case_t *test_case) {
    if (test_case->data_len > MAX_HASH_DATA_LEN)
      return err_status_bad_param;
  
