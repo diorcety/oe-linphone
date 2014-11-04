@@ -1,5 +1,5 @@
 diff --git a/Makefile.in b/Makefile.in
-index 5a7fc21..a7ca1d5 100644
+index 5a7fc21..229aaf7 100644
 --- a/Makefile.in
 +++ b/Makefile.in
 @@ -56,6 +56,8 @@ INSTALL	= @INSTALL@
@@ -29,14 +29,14 @@ index 5a7fc21..a7ca1d5 100644
  	    -o libsrtp.so $^ $(LDFLAGS)
  
 +libsrtp$(SHLIBVERSION): $(srtpobj) $(cryptobj) $(gdoi)
-+	$(eval EXTLDFLAGS := )
++	$(eval EXTLDFLAGS := -Wl,-soname,libsrtp$(SHLIBVERSION))
 +ifneq (,$(findstring darwin,$(host_os)))
 +	$(eval EXTLDFLAGS := -dynamiclib -Wl,-install_name,$(shlibdir)/libsrtp$(SHLIBVERSION))
 +endif
 +ifneq (,$(findstring mingw,$(host_os)))
 +	$(eval EXTLDFLAGS := -Wl,--out-implib,libsrtp.dll.a)
 +endif
-+	$(COMPILE) -shared -Wl,-soname,libsrtp$(SHLIBVERSION) $(LDFLAGS) $(EXTLDFLAGS) -o libsrtp$(SHLIBVERSION) $^ $(LIBS)
++	$(COMPILE) -shared $(LDFLAGS) $(EXTLDFLAGS) -o libsrtp$(SHLIBVERSION) $^ $(LIBS)
 +	if [ -n "$(SHLIB)" ]; then ln -s libsrtp$(SHLIBVERSION) libsrtp$(SHLIB); fi	
 +
  # libcryptomath.a contains general-purpose routines that are used to
@@ -61,22 +61,23 @@ index 5a7fc21..a7ca1d5 100644
  	if [ "$(srcdir)" != "." ]; then cp crypto/include/*.h $(DESTDIR)$(includedir)/srtp; fi
  	if [ -f libsrtp.a ]; then cp libsrtp.a $(DESTDIR)$(libdir)/; fi
 -	if [ -f libsrtp.so ]; then cp libsrtp.so $(DESTDIR)$(libdir)/; fi
-+	if [ -f libsrtp${SHLIB} ]; then cp libsrtp${SHLIB} $(DESTDIR)$(shlibdir)/; fi
++	if [ -f libsrtp${SHLIB} ]; then cp -d libsrtp${SHLIB} $(DESTDIR)$(shlibdir)/; fi
 +	if [ -f libsrtp${SHLIBVERSION} ]; then cp -d libsrtp${SHLIBVERSION} $(DESTDIR)$(shlibdir)/; fi
 +	if [ -f libsrtp.dll.a ]; then cp -d libsrtp.dll.a $(DESTDIR)$(libdir)/; fi
  	if [ "$(pkgconfig_DATA)" != "" ]; then \
  		$(INSTALL) -d $(DESTDIR)$(pkgconfigdir); \
  		cp $(srcdir)/$(pkgconfig_DATA) $(DESTDIR)$(pkgconfigdir)/; \
-@@ -230,7 +248,7 @@ install:
+@@ -230,7 +248,8 @@ install:
  uninstall:
  	rm -f $(DESTDIR)$(includedir)/srtp/*.h
  	rm -f $(DESTDIR)$(libdir)/libsrtp.a
 -	rm -f $(DESTDIR)$(libdir)/libsrtp.so
-+	rm -f $(DESTDIR)$(libdir)/libsrtp$SHLIB) $(DESTDIR)$(libdir)/libsrtp$(SHLIBVERSION)
++	rm -f $(DESTDIR)$(libdir)/libsrtp$(SHLIB) $(DESTDIR)$(libdir)/libsrtp$(SHLIBVERSION)
++	rm -f $(DESTDIR)$(libdir)/libsrtp.dll.a
  	-rmdir $(DESTDIR)$(includedir)/srtp
  	if [ "$(pkgconfig_DATA)" != "" ]; then \
  		rm -f $(DESTDIR)$(pkgconfigdir)/$(pkgconfig_DATA); \
-@@ -238,7 +256,8 @@ uninstall:
+@@ -238,7 +257,8 @@ uninstall:
  
  clean:
  	rm -rf $(cryptobj) $(srtpobj) $(cryptomath) TAGS \
