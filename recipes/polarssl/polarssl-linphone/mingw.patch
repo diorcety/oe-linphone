@@ -1,0 +1,23 @@
+diff --git a/configure.ac b/configure.ac
+index 6dea980..5901062 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -11,15 +11,12 @@ AM_SILENT_RULES(yes)
+ # Checks for programs.
+ AC_PROG_CC
+ 
+-LT_INIT(win32-dll disable-static)
++LT_INIT(win32-dll)
+ 
+ dnl Workaround for mingw, whose compiler doesn't check in /usr/include ...
+-case "$target_os" in
++case "$host" in
+ 	*mingw*)
+-		if test "$prefix" = "/usr" ; then
+-			CPPFLAGS="$CPPFLAGS -I/usr/include"
+-			LDFLAGS="$LDFLAGS -L/usr/lib"
+-		fi
++		LIBS="$LIBS -lws2_32"
+ 		mingw_found=yes
+ 	;;
+ esac

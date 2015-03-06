@@ -2,8 +2,9 @@ require polarssl.inc
 
 S = "${SRCDIR}/polarssl/"
 
-SRC_URI = "git://git.linphone.org/polarssl.git;branch=linphone-1.3.4"
+SRC_URI = "git://git.linphone.org/polarssl.git;branch=linphone-1.4"
 SRC_URI += "file://disable_optim_64bits.patch"
+SRC_URI += "file://mingw.patch"
 #SRC_URI += "file://darwin.patch"
 #SRC_URI += "file://soname.patch"
 #SRC_URI += "file://static_shared.patch"
